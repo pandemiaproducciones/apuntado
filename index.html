@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>APUNTADO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 * {
@@ -47,6 +47,11 @@ select, button {
 
 button {
   cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .btn-play {
@@ -109,7 +114,6 @@ button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
 }
 
 .score {
@@ -122,6 +126,7 @@ button {
   font-size: 14px;
   letter-spacing: 2px;
   color: #d4af37;
+  font-weight: bold;
 }
 
 .bottom-controls {
@@ -139,7 +144,7 @@ button {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 10;
 }
 
 .modal-content {
@@ -170,7 +175,6 @@ button {
 .modal-buttons button {
   flex: 1;
 }
-
 </style>
 </head>
 
@@ -187,7 +191,7 @@ button {
       <option value="6">6 jugadores</option>
     </select>
     <button onclick="showRules()">Reglas</button>
-    <button class="btn-play" onclick="saveGame()">JUGAR</button>
+    <button class="btn-play" id="btnPlay" onclick="onPlayClick()" disabled>JUGAR</button>
   </div>
 </header>
 
@@ -200,7 +204,7 @@ button {
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <input id="pointsInput" type="number" inputmode="numeric" placeholder="Puntos" />
+    <input id="pointsInput" type="number" inputmode="numeric" placeholder="Puntos">
     <div class="modal-buttons">
       <button onclick="applyPoints(1)">+ Sumar</button>
       <button onclick="applyPoints(-1)">− Restar</button>
@@ -213,19 +217,87 @@ const playersContainer = document.getElementById("players");
 const selector = document.getElementById("playerCount");
 const modal = document.getElementById("modal");
 const pointsInput = document.getElementById("pointsInput");
+const btnPlay = document.getElementById("btnPlay");
 
 let currentScoreElement = null;
 let history = [];
 let gameOver = false;
 let winnerIndex = null;
+let namesEdited = false;
+let lastSavedCount = null;
+let lastSavedPlayers = [];
+
+function loadGame() {
+  const saved = localStorage.getItem("apuntadoGame");
+  if (!saved) return null;
+  try {
+    return JSON.parse(saved);
+  } catch {
+    return null;
+  }
+}
+
+function saveGame() {
+  const players = [];
+  document.querySelectorAll(".player").forEach(p => {
+    players.push({
+      name: p.querySelector(".name-zone input").value.trim() || "Jugador",
+      score: parseInt(p.querySelector(".score").textContent) || 0
+    });
+  });
+  const data = {
+    count: parseInt(selector.value),
+    players
+  };
+  localStorage.setItem("apuntadoGame", JSON.stringify(data));
+  lastSavedCount = data.count;
+  lastSavedPlayers = players.map(p => ({...p})); // copia para comparación
+  btnPlay.disabled = true;
+  namesEdited = false;
+}
+
+function saveSnapshot() {
+  const data = localStorage.getItem("apuntadoGame");
+  return data;
+}
+
+function undoLast() {
+  if (history.length === 0) {
+    alert("No hay acciones para deshacer");
+    return;
+  }
+  const last = history.pop();
+  if (last) {
+    localStorage.setItem("apuntadoGame", last);
+    gameOver = false;
+    winnerIndex = null;
+    renderPlayers();
+    btnPlay.disabled = true;
+    namesEdited = false;
+  }
+}
+
+function confirmReset() {
+  if (confirm("¿Seguro que quieres reiniciar el juego?")) {
+    localStorage.removeItem("apuntadoGame");
+    history = [];
+    gameOver = false;
+    winnerIndex = null;
+    renderPlayers();
+    btnPlay.disabled = true;
+    namesEdited = false;
+  }
+}
 
 function renderPlayers() {
   playersContainer.innerHTML = "";
 
-  const saved = localStorage.getItem("apuntadoGame");
-  const savedData = saved ? JSON.parse(saved) : null;
-
-  if (savedData) selector.value = savedData.count;
+  const savedData = loadGame();
+  if (savedData) {
+    if (selector.value != savedData.count) {
+      selector.value = savedData.count;
+    }
+  }
 
   const count = parseInt(selector.value);
 
@@ -242,23 +314,32 @@ function renderPlayers() {
     }
 
     const name = savedData?.players[i]?.name || `Jugador ${i + 1}`;
-    const score = savedData?.players[i]?.score || 0;
+    const score = savedData?.players[i]?.score ?? 0;
 
     player.innerHTML = `
       <div class="name-zone">
-        <input value="${name}" ${gameOver ? "disabled" : ""}>
+        <input value="${name}" ${gameOver ? "disabled" : ""} data-player-index="${i}">
       </div>
       <div class="divider"></div>
-      <div class="score-zone">
+      <div class="score-zone" data-player-index="${i}">
         <div class="score">${score}</div>
         ${gameOver && i === winnerIndex ? `<div class="winner-label">GANADOR</div>` : ""}
       </div>
     `;
 
+    const nameInput = player.querySelector(".name-zone input");
     const scoreZone = player.querySelector(".score-zone");
     const scoreElement = player.querySelector(".score");
 
     if (!gameOver) {
+      // Detectar edición de nombre para activar botón JUGAR
+      nameInput.addEventListener("input", () => {
+        if (!namesEdited) {
+          namesEdited = true;
+          btnPlay.disabled = false;
+        }
+      });
+
       scoreZone.onclick = () => {
         currentScoreElement = scoreElement;
         pointsInput.value = "";
@@ -277,21 +358,10 @@ function applyPoints(multiplier) {
     history.push(saveSnapshot());
     const newScore = parseInt(currentScoreElement.textContent) + value * multiplier;
     currentScoreElement.textContent = newScore;
-
-    if (newScore >= 101) {
-      alert("¡Jugador superó los 101 puntos! Debe decidir si entra o no.");
-      // Aquí pondrás la lógica para la pregunta de confirmación de entrada
-    }
-
-    modal.style.display = "none";
-    pointsInput.value = "";
-
     checkWinner();
-    renderPlayers();
-    saveGame(false);
-  } else {
-    modal.style.display = "none";
+    saveGame();
   }
+  closeModal();
 }
 
 function checkWinner() {
@@ -301,70 +371,17 @@ function checkWinner() {
     if (value <= -51 && !gameOver) {
       gameOver = true;
       winnerIndex = index;
-      alert(`¡GANADOR: ${scoreEl.parentElement.previousElementSibling.querySelector('input').value} con ${value} puntos!`);
       renderPlayers();
     }
   });
 }
 
-function saveSnapshot() {
-  return localStorage.getItem("apuntadoGame");
+function closeModal() {
+  modal.style.display = "none";
 }
 
-function undoLast() {
-  if (history.length === 0) {
-    alert("No hay acciones para deshacer");
-    return;
-  }
-  const last = history.pop();
-  if (last) {
-    localStorage.setItem("apuntadoGame", last);
-    gameOver = false;
-    winnerIndex = null;
-    renderPlayers();
-  }
-}
-
-function confirmReset() {
-  if (confirm("¿Seguro que quieres reiniciar el juego?")) {
-    localStorage.removeItem("apuntadoGame");
-    history = [];
-    gameOver = false;
-    winnerIndex = null;
-    renderPlayers();
-  }
-}
-
-function saveGame(showAlert = true) {
-  const players = [];
-  document.querySelectorAll(".player").forEach(p => {
-    players.push({
-      name: p.querySelector("input").value,
-      score: parseInt(p.querySelector(".score").textContent)
-    });
-  });
-  localStorage.setItem("apuntadoGame", JSON.stringify({
-    count: selector.value,
-    players
-  }));
-  if (showAlert) alert("Juego guardado");
-}
-
-selector.onchange = () => {
-  if (confirm("Cambiar la cantidad de jugadores reiniciará el juego. ¿Quieres continuar?")) {
-    localStorage.removeItem("apuntadoGame");
-    history = [];
-    gameOver = false;
-    winnerIndex = null;
-    renderPlayers();
-  } else {
-    const saved = localStorage.getItem("apuntadoGame");
-    if (saved) {
-      selector.value = JSON.parse(saved).count;
-    } else {
-      selector.value = "2";
-    }
-  }
+modal.onclick = e => {
+  if (e.target === modal) closeModal();
 };
 
 function showRules() {
@@ -373,16 +390,39 @@ function showRules() {
     "• Gana quien llegue a −51 puntos\n" +
     "• Toca el nombre para editarlo\n" +
     "• Toca el puntaje para sumar o restar\n" +
-    "• Cuando un jugador supera 101 puntos, debe confirmar si quiere volver a entrar\n" +
     "• DESHACER sigue activo tras ganar"
   );
 }
 
-renderPlayers();
-
-modal.onclick = e => {
-  if (e.target === modal) modal.style.display = "none";
+// Cambio cantidad jugadores con confirmación de reinicio
+selector.onchange = () => {
+  if (gameOver || namesEdited) {
+    // Si hay un juego en progreso o nombres editados, confirmamos reinicio
+    if (!confirm("Cambiar la cantidad de jugadores reiniciará el juego. ¿Continuar?")) {
+      // Cancelar cambio: revertir el selector al valor previo guardado
+      if (lastSavedCount) {
+        selector.value = lastSavedCount;
+      } else {
+        selector.value = 2;
+      }
+      return;
+    }
+  }
+  // Reiniciar juego
+  gameOver = false;
+  winnerIndex = null;
+  history = [];
+  btnPlay.disabled = true;
+  namesEdited = false;
+  renderPlayers();
 };
+
+function onPlayClick() {
+  saveGame();
+  alert("Juego guardado. ¡A jugar!");
+}
+
+renderPlayers();
 </script>
 
 </body>
