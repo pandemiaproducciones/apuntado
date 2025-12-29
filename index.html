@@ -39,7 +39,7 @@ h1 {
 select, button {
   padding: 8px 12px;
   font-size: 16px;
-  border-radius: 5px;
+  border-radius: 6px;
   border: 1px solid #333;
   background: #000;
   color: #fff;
@@ -49,16 +49,15 @@ button {
   cursor: pointer;
 }
 
-/* BOTÓN PRINCIPAL */
+/* BOTONES ESPECIALES */
 .btn-play {
-  background: #0f3d2e;
-  border-color: #1e6f4c;
+  border-color: #2f6b3f;
+  color: #9be5b1;
 }
 
-/* BOTONES PELIGROSOS */
 .btn-danger {
-  background: #3a0d0d;
-  border-color: #7a1f1f;
+  border-color: #6b2f2f;
+  color: #e5a0a0;
 }
 
 .players {
@@ -104,6 +103,7 @@ button {
   font-weight: bold;
 }
 
+/* CONTROLES INFERIORES */
 .bottom-controls {
   display: flex;
   justify-content: center;
@@ -176,6 +176,7 @@ button {
   <button class="btn-danger" onclick="confirmReset()">REINICIAR</button>
 </div>
 
+<!-- MODAL -->
 <div class="modal" id="modal">
   <div class="modal-content" id="modalContent"></div>
 </div>
@@ -216,10 +217,8 @@ function renderPlayers() {
       </div>
     `;
 
-    const scoreZone = player.querySelector(".score-zone");
-    const scoreElement = player.querySelector(".score");
-
-    scoreZone.onclick = () => openPointsModal(scoreElement);
+    player.querySelector(".score-zone").onclick =
+      () => openPointsModal(player.querySelector(".score"));
 
     playersContainer.appendChild(player);
   }
@@ -227,11 +226,12 @@ function renderPlayers() {
 
 function openPointsModal(scoreElement) {
   currentScoreElement = scoreElement;
+
   modalContent.innerHTML = `
-    <input 
+    <input
       type="number"
       inputmode="numeric"
-      pattern="[0-9]*"
+      autofocus
       id="pointsInput"
       placeholder="Puntos"
     >
@@ -240,7 +240,13 @@ function openPointsModal(scoreElement) {
       <button onclick="applyPoints(-1)">− Restar</button>
     </div>
   `;
+
   modal.style.display = "flex";
+
+  // Forzar foco inmediato (iOS friendly)
+  setTimeout(() => {
+    document.getElementById("pointsInput").focus();
+  }, 50);
 }
 
 function applyPoints(multiplier) {
@@ -320,14 +326,14 @@ modal.onclick = e => {
 function showRules() {
   alert(
     "APUNTADO\n\n" +
-    "Juego de cartas donde solo importa el puntaje final.\n\n" +
     "• Toca el nombre para editarlo\n" +
     "• Toca el puntaje para sumar o restar\n" +
-    "• Usa JUGAR para guardar la partida"
+    "• JUGAR guarda la partida"
   );
 }
 
 selector.onchange = renderPlayers;
+
 renderPlayers();
 </script>
 
