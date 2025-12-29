@@ -112,6 +112,24 @@ button:disabled {
   outline: none;
 }
 
+/* Etiqueta "ENTRADAS:" amarilla debajo del nombre */
+.entradas-label {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  background: #ffeb3b; /* amarillo */
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 6px;
+  width: fit-content;
+  align-self: center;
+}
+
+/* Puntaje en rojo para jugadores que no continúan */
+.score.out {
+  color: #e55353;
+}
+
 .divider {
   height: 1px;
   background: #333;
@@ -230,7 +248,6 @@ button:disabled {
   border: 2px solid orange;
   color: orange;
 }
-
 </style>
 </head>
 
@@ -314,6 +331,8 @@ function saveGame() {
       name: p.querySelector(".name-zone input").value.trim() || "Jugador",
       score: parseInt(p.querySelector(".score").textContent) || 0,
       disabled: p.classList.contains("disabled"),
+      out: p.querySelector(".score").classList.contains("out") || false,
+      entradas: p.dataset.entradas ? parseInt(p.dataset.entradas) : 0,
     });
   });
   const data = {
@@ -378,6 +397,8 @@ function renderPlayers() {
     const savedData = loadGame();
     const isDisabled =
       savedData?.players[i]?.disabled === true ? true : false;
+    const isOut = savedData?.players[i]?.out === true ? true : false;
+    const entradasCount = savedData?.players[i]?.entradas || 0;
 
     if (gameOver) {
       if (i === winnerIndex) {
@@ -392,13 +413,20 @@ function renderPlayers() {
     const name = savedData?.players[i]?.name || `Jugador ${i + 1}`;
     const score = savedData?.players[i]?.score ?? 0;
 
+    player.dataset.entradas = entradasCount;
+
     player.innerHTML = `
       <div class="name-zone">
         <input value="${name}" ${gameOver || isDisabled ? "disabled" : ""} data-player-index="${i}">
+        ${
+          entradasCount > 0
+            ? `<div class="entradas-label">ENTRADAS: ${entradasCount}</div>`
+            : ""
+        }
       </div>
       <div class="divider"></div>
       <div class="score-zone" data-player-index="${i}">
-        <div class="score">${score}</div>
+        <div class="score${isOut ? " out" : ""}">${score}</div>
         ${
           gameOver && i === winnerIndex
             ? `<div class="winner-label">GANADOR</div>`
@@ -457,10 +485,8 @@ function checkSpecialScores(newScore, scoreElement) {
 
   // Si pasa de 101 pregunta si quiere reingresar
   if (newScore > 101) {
-    // Evitar que se llame varias veces si el modal ya está abierto
     if (reingresoOverlay.style.display === "flex") return;
 
-    // Guardar el índice del jugador que pasó 101
     const players = document.querySelectorAll(".player");
     winnerIndex = null;
     gameOver = false;
@@ -469,9 +495,8 @@ function checkSpecialScores(newScore, scoreElement) {
       return player.querySelector(".score") === scoreElement;
     });
 
-    if (reingresoJugadorIndex === -1) return; // no encontrado
+    if (reingresoJugadorIndex === -1) return;
 
-    // Mostrar overlay pregunta
     reingresoMensaje.textContent = `El jugador "${players[reingresoJugadorIndex].querySelector(".name-zone input").value}" superó 101 puntos. ¿Quieres que vuelva a entrar?`;
     reingresoOverlay.style.display = "flex";
   }
@@ -488,9 +513,9 @@ function handleReingreso(decision) {
   const scoreElement = player.querySelector(".score");
 
   if (decision === false) {
-    // NO quiere reingresar: deshabilitar la casilla, conservar datos
+    // NO quiere reingresar: dejar puntaje en rojo y bloquear casilla
     player.classList.add("disabled");
-    // Guardamos para que quede bloqueado después de recargar
+    scoreElement.classList.add("out");
     saveGame();
     reingresoOverlay.style.display = "none";
     reingresoJugadorIndex = null;
@@ -498,7 +523,11 @@ function handleReingreso(decision) {
     // SI quiere reingresar: cerrar overlay y abrir modal de ingreso puntaje entre 0 y 100
     reingresoOverlay.style.display = "none";
 
-    // Preparar modal para ingreso manual de puntaje
+    // Incrementar contador de entradas
+    let entradasCount = parseInt(player.dataset.entradas) || 0;
+    entradasCount++;
+    player.dataset.entradas = entradasCount;
+
     currentScoreElement = scoreElement;
     pointsInput.value = "";
     modal.style.display = "flex";
@@ -513,6 +542,9 @@ function handleReingreso(decision) {
       }
       history.push(saveSnapshot());
       currentScoreElement.textContent = val;
+      player.dataset.entradas = entradasCount; // actualizar dataset
+      player.classList.remove("disabled");
+      scoreElement.classList.remove("out");
       saveGame();
       modal.style.display = "none";
       applyPointsForReingreso = null;
@@ -524,7 +556,7 @@ function handleReingreso(decision) {
     const buttons = modal.querySelectorAll(".modal-buttons button");
     buttons[0].onclick = () => applyPointsForReingreso();
     buttons[1].onclick = () => {
-      // No restar en reingreso, solo cancelar
+      // Cancelar reingreso
       modal.style.display = "none";
       applyPointsForReingreso = null;
       reingresoJugadorIndex = null;
@@ -535,7 +567,6 @@ function handleReingreso(decision) {
 }
 
 function checkWinnerAfterReingreso() {
-  // Revisar si después del reingreso hay ganador (puntos <= -51)
   const scores = document.querySelectorAll(".score");
   scores.forEach((scoreEl, index) => {
     const val = parseInt(scoreEl.textContent);
@@ -549,7 +580,6 @@ function checkWinnerAfterReingreso() {
 
 function closeModal() {
   modal.style.display = "none";
-  // Restaurar botones modal a modo normal sumar/restar para futuros usos
   const buttons = modal.querySelectorAll(".modal-buttons button");
   buttons[0].onclick = () => applyPoints(1);
   buttons[1].onclick = () => applyPoints(-1);
@@ -572,7 +602,6 @@ function showRules() {
   );
 }
 
-// Confirmación para cambiar cantidad de jugadores siempre
 selector.onchange = () => {
   if (!confirm("Cambiar la cantidad de jugadores reiniciará el juego. ¿Continuar?")) {
     if (lastSavedCount) {
@@ -585,14 +614,14 @@ selector.onchange = () => {
   gameOver = false;
   winnerIndex = null;
   history = [];
-  updatePlayButtonState(false);
   namesEdited = false;
   renderPlayers();
+  updatePlayButtonState(false);
 };
 
-function updatePlayButtonState(enabled) {
-  btnPlay.disabled = !enabled;
-  if (enabled) {
+function updatePlayButtonState(active) {
+  btnPlay.disabled = !active;
+  if (active) {
     btnPlay.classList.add("active");
   } else {
     btnPlay.classList.remove("active");
@@ -601,21 +630,9 @@ function updatePlayButtonState(enabled) {
 
 function onPlayClick() {
   saveGame();
-  alert("Juego guardado. ¡A jugar!");
+  alert("¡A jugar!");
   updatePlayButtonState(false);
   namesEdited = false;
-}
-
-function checkWinner() {
-  const scores = document.querySelectorAll(".score");
-  scores.forEach((scoreEl, index) => {
-    const value = parseInt(scoreEl.textContent);
-    if (value <= -51 && !gameOver) {
-      gameOver = true;
-      winnerIndex = index;
-      renderPlayers();
-    }
-  });
 }
 
 renderPlayers();
