@@ -537,11 +537,6 @@ function handleReingreso(decision) {
     // SI quiere reingresar: cerrar overlay y abrir modal de ingreso puntaje entre 0 y 100
     reingresoOverlay.style.display = "none";
 
-    // Incrementar contador de entradas
-    let entradasCount = parseInt(player.dataset.entradas) || 0;
-    entradasCount++;
-    player.dataset.entradas = entradasCount;
-
     currentScoreElement = scoreElement;
     pointsInput.value = "";
     modal.style.display = "flex";
@@ -553,11 +548,16 @@ function handleReingreso(decision) {
         alert("Por favor ingresa un número entre 0 y 100");
         return;
       }
+
       history.push(saveSnapshot());
       currentScoreElement.textContent = val;
-      player.dataset.entradas = entradasCount; // actualizar dataset
 
-      // Actualizar etiqueta de entradas visible sin recargar
+      // Incrementar contador de entradas y actualizar dataset
+      let entradasCount = parseInt(player.dataset.entradas) || 0;
+      entradasCount++;
+      player.dataset.entradas = entradasCount;
+
+      // Actualizar o crear etiqueta "ENTRADAS" visible
       const entradasLabel = player.querySelector(".entradas-label");
       if (entradasLabel) {
         entradasLabel.textContent = `ENTRADAS: ${entradasCount}`;
@@ -581,7 +581,6 @@ function handleReingreso(decision) {
     const buttons = modal.querySelectorAll(".modal-buttons button");
     buttons[0].onclick = () => applyPointsForReingreso();
     buttons[1].onclick = () => {
-      // Cancelar reingreso
       modal.style.display = "none";
       applyPointsForReingreso = null;
       reingresoJugadorIndex = null;
@@ -624,7 +623,6 @@ selector.onchange = () => {
     renderPlayers();
     updatePlayButtonState(false);
   } else {
-    // Revertir cambio en selector
     if (lastSavedCount !== null) {
       selector.value = lastSavedCount;
     } else {
