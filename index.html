@@ -300,12 +300,14 @@ function undoLast() {
     alert("No hay acciones para deshacer");
     return;
   }
-  const last = history.pop();
-  if (last) {
-    localStorage.setItem("apuntadoGame", last);
-    gameOver = false;
-    winnerIndex = null;
-    renderPlayers();
+  if (confirm("¿Seguro que quieres deshacer la última acción?")) {
+    const last = history.pop();
+    if (last) {
+      localStorage.setItem("apuntadoGame", last);
+      gameOver = false;
+      winnerIndex = null;
+      renderPlayers();
+    }
   }
 }
 
@@ -331,7 +333,7 @@ function saveGame() {
     count: selector.value,
     players
   }));
-  alert("Partida guardada");  // Aquí está la alerta añadida
+  alert("Partida guardada");
 }
 
 function closeModal() {
