@@ -57,6 +57,14 @@ button:disabled {
 .btn-play {
   border-color: #2f6b3f;
   color: #9be5b1;
+  background: transparent;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.btn-play.active {
+  background-color: #2f6b3f;
+  color: white;
+  border-color: #2f6b3f;
 }
 
 .btn-danger {
@@ -252,7 +260,7 @@ function saveGame() {
   localStorage.setItem("apuntadoGame", JSON.stringify(data));
   lastSavedCount = data.count;
   lastSavedPlayers = players.map(p => ({...p})); // copia para comparación
-  btnPlay.disabled = true;
+  updatePlayButtonState(false);
   namesEdited = false;
 }
 
@@ -272,7 +280,7 @@ function undoLast() {
     gameOver = false;
     winnerIndex = null;
     renderPlayers();
-    btnPlay.disabled = true;
+    updatePlayButtonState(false);
     namesEdited = false;
   }
 }
@@ -284,7 +292,7 @@ function confirmReset() {
     gameOver = false;
     winnerIndex = null;
     renderPlayers();
-    btnPlay.disabled = true;
+    updatePlayButtonState(false);
     namesEdited = false;
   }
 }
@@ -336,7 +344,7 @@ function renderPlayers() {
       nameInput.addEventListener("input", () => {
         if (!namesEdited) {
           namesEdited = true;
-          btnPlay.disabled = false;
+          updatePlayButtonState(true);
         }
       });
 
@@ -394,28 +402,34 @@ function showRules() {
   );
 }
 
-// Cambio cantidad jugadores con confirmación de reinicio
+// Cambio cantidad jugadores con confirmación SIEMPRE
 selector.onchange = () => {
-  if (gameOver || namesEdited) {
-    // Si hay un juego en progreso o nombres editados, confirmamos reinicio
-    if (!confirm("Cambiar la cantidad de jugadores reiniciará el juego. ¿Continuar?")) {
-      // Cancelar cambio: revertir el selector al valor previo guardado
-      if (lastSavedCount) {
-        selector.value = lastSavedCount;
-      } else {
-        selector.value = 2;
-      }
-      return;
+  if (!confirm("Cambiar la cantidad de jugadores reiniciará el juego. ¿Continuar?")) {
+    // Cancelar cambio: revertir el selector al valor previo guardado
+    if (lastSavedCount) {
+      selector.value = lastSavedCount;
+    } else {
+      selector.value = 2;
     }
+    return;
   }
   // Reiniciar juego
   gameOver = false;
   winnerIndex = null;
   history = [];
-  btnPlay.disabled = true;
+  updatePlayButtonState(false);
   namesEdited = false;
   renderPlayers();
 };
+
+function updatePlayButtonState(enabled) {
+  btnPlay.disabled = !enabled;
+  if (enabled) {
+    btnPlay.classList.add('active');
+  } else {
+    btnPlay.classList.remove('active');
+  }
+}
 
 function onPlayClick() {
   saveGame();
