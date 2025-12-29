@@ -1,226 +1,231 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>APUNTADO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-  * {
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-  }
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
 
-  body {
-    margin: 0;
-    background: #000;
-    color: #fff;
-    min-height: 100vh;
-  }
+body {
+  margin: 0;
+  background: #000;
+  color: #fff;
+  min-height: 100vh;
+}
 
-  header {
-    text-align: center;
-    padding: 15px;
-  }
+header {
+  text-align: center;
+  padding: 15px;
+}
 
-  h1 {
-    margin: 5px 0;
-    letter-spacing: 4px;
-  }
+h1 {
+  margin: 5px 0;
+  letter-spacing: 4px;
+}
 
-  .controls {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-  }
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
 
-  select, button {
-    padding: 8px 12px;
-    font-size: 16px;
-    border-radius: 6px;
-    border: 1px solid #333;
-    background: #000;
-    color: #fff;
-  }
+select, button {
+  padding: 8px 12px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #000;
+  color: #fff;
+}
 
-  button {
-    cursor: pointer;
-  }
+button {
+  cursor: pointer;
+}
 
-  .btn-play {
-    border-color: #2f6b3f;
-    color: #9be5b1;
-  }
+.btn-play {
+  border-color: #2f6b3f;
+  color: #9be5b1;
+}
 
-  .btn-danger {
-    border-color: #6b2f2f;
-    color: #e5a0a0;
-  }
+.btn-danger {
+  border-color: #6b2f2f;
+  color: #e5a0a0;
+}
 
-  .players {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    height: calc(100vh - 190px);
-  }
+.players {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  height: calc(100vh - 190px);
+}
 
-  .player {
-    border: 1px solid #222;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    transition: opacity 0.3s, border 0.3s;
-  }
+.player {
+  border: 1px solid #222;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.3s, border 0.3s;
+}
 
-  .player.disabled {
-    opacity: 0.4;
-    pointer-events: none;
-  }
+.player.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
 
-  .player.winner {
-    border: 2px solid #d4af37;
-  }
+.player.winner {
+  border: 2px solid #d4af37;
+}
 
-  .player.winner input {
-    font-weight: bold;
-  }
+.player.winner input {
+  font-weight: bold;
+}
 
-  .name-zone input {
-    width: 100%;
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 18px;
-    text-align: center;
-    outline: none;
-  }
+.player.winner .score {
+  color: #d4af37;
+  font-weight: bold;
+}
 
-  .divider {
-    height: 1px;
-    background: #333;
-    margin: 8px 0;
-  }
+.name-zone input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  text-align: center;
+  outline: none;
+}
 
-  .score-zone {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
+.divider {
+  height: 1px;
+  background: #333;
+  margin: 8px 0;
+}
 
-  .score {
-    font-size: 48px;
-    font-weight: bold;
-  }
+.score-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
 
-  .winner-label {
-    margin-top: 6px;
-    font-size: 14px;
-    letter-spacing: 2px;
-    color: #d4af37;
-  }
+.score {
+  font-size: 48px;
+  font-weight: bold;
+}
 
-  .bottom-controls {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    padding: 10px;
-  }
+.winner-label {
+  margin-top: 6px;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: #d4af37;
+}
 
-  /* MODAL */
-  .modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
+.bottom-controls {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px;
+}
 
-  .modal-content {
-    background: #111;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    width: 85%;
-    max-width: 320px;
-  }
+/* MODAL */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
 
-  .modal-content input {
-    width: 100%;
-    padding: 12px;
-    font-size: 22px;
-    margin-bottom: 12px;
-    text-align: center;
-    background: #000;
-    color: #fff;
-    border: 1px solid #333;
-  }
+.modal-content {
+  background: #111;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  width: 85%;
+  max-width: 320px;
+}
 
-  .modal-buttons {
-    display: flex;
-    gap: 10px;
-  }
+.modal-content input {
+  width: 100%;
+  padding: 12px;
+  font-size: 22px;
+  margin-bottom: 12px;
+  text-align: center;
+  background: #000;
+  color: #fff;
+  border: 1px solid #333;
+}
 
-  .modal-buttons button {
-    flex: 1;
-  }
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+}
 
-  /* ENTRAR opciones */
-  .player.out {
-    opacity: 0.3;
-    position: relative;
-    pointer-events: none;
-  }
+.modal-buttons button {
+  flex: 1;
+}
 
-  .player.out .entry-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    color: #d4af37;
-    font-weight: bold;
-    font-size: 28px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    pointer-events: auto;
-    user-select: none;
-  }
+/* ENTRAR opciones */
+.player.out {
+  opacity: 0.3;
+  position: relative;
+  pointer-events: none;
+}
 
-  .entry-buttons {
-    display: flex;
-    gap: 12px;
-  }
+.player.out .entry-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  color: #d4af37;
+  font-weight: bold;
+  font-size: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  pointer-events: auto;
+  user-select: none;
+}
 
-  .entry-buttons button {
-    padding: 8px 20px;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 8px;
-    border: 2px solid transparent;
-    cursor: pointer;
-    user-select: none;
-  }
+.entry-buttons {
+  display: flex;
+  gap: 12px;
+}
 
-  .entry-buttons button.yes {
-    background: #1e3ec8; /* azul */
-    color: white;
-  }
+.entry-buttons button {
+  padding: 8px 20px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  user-select: none;
+}
 
-  .entry-buttons button.no {
-    background: #c81e1e; /* rojo */
-    color: white;
-  }
+.entry-buttons button.yes {
+  background: #1e3ec8; /* azul */
+  color: white;
+}
 
-  .entry-buttons button.selected {
-    border-color: white;
-  }
+.entry-buttons button.no {
+  background: #c81e1e; /* rojo */
+  color: white;
+}
+
+.entry-buttons button.selected {
+  border-color: white;
+}
 </style>
 </head>
 
@@ -244,7 +249,7 @@
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <input id="pointsInput" type="number" inputmode="numeric" placeholder="Puntos" />
+    <input id="pointsInput" type="number" inputmode="numeric" placeholder="Puntos">
     <div class="modal-buttons">
       <button onclick="applyPoints(1)">+ Sumar</button>
       <button onclick="applyPoints(-1)">− Restar</button>
@@ -253,306 +258,320 @@
 </div>
 
 <script>
-  // ——————————————————————
-  // VARIABLES Y ESTADO
-  // ——————————————————————
-  const playersContainer = document.getElementById("players");
-  const selector = document.getElementById("playerCount");
-  const modal = document.getElementById("modal");
-  const pointsInput = document.getElementById("pointsInput");
+const playersContainer = document.getElementById("players");
+const selector = document.getElementById("playerCount");
+const modal = document.getElementById("modal");
+const pointsInput = document.getElementById("pointsInput");
 
-  let currentScoreElement = null;
-  let history = [];
-  let gameOver = false;
-  let winnerIndex = null;
-  const playersPendingEntry = new Map();
+let currentScoreElement = null;
+let history = [];
+let gameOver = false;
+let winnerIndex = null;
 
-  // ——————————————————————
-  // FUNCIONES DE RENDERIZADO
-  // ——————————————————————
-  function renderPlayers() {
-    playersContainer.innerHTML = "";
+// Jugadores que deben decidir si quieren volver a entrar
+const playersPendingEntry = new Map();
 
-    let saved = localStorage.getItem("apuntadoGame");
-    const savedCount = localStorage.getItem("apuntadoPlayerCount");
+function populatePlayerCountOptions() {
+  // Agrega opciones 2 a 6 para selector
+  for (let i = 2; i <= 6; i++) {
+    const option = document.createElement("option");
+    option.value = i;
+    option.textContent = `${i} jugadores`;
+    selector.appendChild(option);
+  }
+}
+populatePlayerCountOptions();
 
-    if (savedCount && savedCount !== selector.value) {
-      saved = null;
-    }
+function renderPlayers() {
+  playersContainer.innerHTML = "";
 
-    const savedData = saved ? JSON.parse(saved) : null;
+  // Leer guardado
+  let saved = localStorage.getItem("apuntadoGame");
+  const savedCount = localStorage.getItem("apuntadoPlayerCount");
 
-    if (savedData) selector.value = savedData.count;
+  if (savedCount && savedCount !== selector.value) {
+    saved = null; // evitar conflicto si cambió la cantidad
+  }
 
-    const count = parseInt(selector.value);
+  const savedData = saved ? JSON.parse(saved) : null;
 
-    for (let i = 0; i < count; i++) {
-      const player = document.createElement("div");
+  if (savedData) selector.value = savedData.count;
 
-      const isOut = savedData?.players[i]?.score >= 101;
-      const isWinner = gameOver && i === winnerIndex;
+  const count = parseInt(selector.value);
 
-      player.className = "player";
-      if (gameOver) {
-        if (isWinner) {
-          player.classList.add("winner");
-        } else {
-          player.classList.add("disabled");
-        }
-      }
-      if (isOut) {
-        player.classList.add("out");
-        if (playersPendingEntry.has(i)) {
-          player.innerHTML = `
-            <div class="name-zone">
-              <input value="${savedData.players[i].name}" disabled />
-            </div>
-            <div class="divider"></div>
-            <div class="score-zone">
-              <div class="score">${savedData.players[i].score}</div>
-            </div>
-            <div class="entry-overlay">
-              <div>ENTRAR?</div>
-              <div class="entry-buttons">
-                <button class="yes" onclick="entryDecision(${i}, true, this)">SI</button>
-                <button class="no" onclick="entryDecision(${i}, false, this)">NO</button>
-              </div>
-            </div>
-          `;
-        } else {
-          player.innerHTML = `
-            <div class="name-zone">
-              <input value="${savedData.players[i].name}" disabled />
-            </div>
-            <div class="divider"></div>
-            <div class="score-zone">
-              <div class="score">${savedData.players[i].score}</div>
-            </div>
-          `;
-        }
+  for (let i = 0; i < count; i++) {
+    const player = document.createElement("div");
+
+    const isOut = savedData?.players[i]?.score >= 101;
+    const isWinner = gameOver && i === winnerIndex;
+
+    player.className = "player";
+    if (gameOver) {
+      if (isWinner) {
+        player.classList.add("winner");
       } else {
+        player.classList.add("disabled");
+      }
+    }
+    if (isOut) {
+      player.classList.add("out");
+      // Si está pendiente decidir, mostrar opciones
+      if (playersPendingEntry.has(i)) {
         player.innerHTML = `
           <div class="name-zone">
-            <input value="${savedData?.players[i]?.name || `Jugador ${i + 1}`}" ${
-          gameOver ? "disabled" : ""
-        } />
+            <input value="${savedData.players[i].name}" disabled>
           </div>
           <div class="divider"></div>
           <div class="score-zone">
-            <div class="score">${savedData?.players[i]?.score ?? 0}</div>
-            ${isWinner ? `<div class="winner-label">GANADOR</div>` : ""}
+            <div class="score">${savedData.players[i].score}</div>
+          </div>
+          <div class="entry-overlay">
+            <div style="color:#d4af37; font-weight:bold; font-size:28px;">ENTRAR?</div>
+            <div class="entry-buttons">
+              <button class="yes" onclick="entryDecision(${i}, true, this)">SI</button>
+              <button class="no" onclick="entryDecision(${i}, false, this)">NO</button>
+            </div>
+          </div>
+        `;
+      } else {
+        player.innerHTML = `
+          <div class="name-zone">
+            <input value="${savedData.players[i].name}" disabled>
+          </div>
+          <div class="divider"></div>
+          <div class="score-zone">
+            <div class="score">${savedData.players[i].score}</div>
           </div>
         `;
       }
-
-      if (!gameOver && !isOut) {
-        const scoreZone = player.querySelector(".score-zone");
-        const scoreElement = player.querySelector(".score");
-        scoreZone.onclick = () => {
-          currentScoreElement = scoreElement;
-          pointsInput.value = "";
-          modal.style.display = "flex";
-          pointsInput.focus();
-        };
-      }
-
-      playersContainer.appendChild(player);
-    }
-  }
-
-  // ——————————————————————
-  // FUNCIONES DE CONTROL DE JUEGO
-  // ——————————————————————
-  function applyPoints(multiplier) {
-    const value = parseInt(pointsInput.value);
-    if (!isNaN(value)) {
-      history.push(saveSnapshot());
-      currentScoreElement.textContent =
-        parseInt(currentScoreElement.textContent) + value * multiplier;
-      checkWinner();
-      checkPlayersOut();
-    }
-    closeModal();
-  }
-
-  function checkWinner() {
-    const scores = document.querySelectorAll(".score");
-    scores.forEach((scoreEl, index) => {
-      const value = parseInt(scoreEl.textContent);
-      if (value <= -51 && !gameOver) {
-        gameOver = true;
-        winnerIndex = index;
-        renderPlayers();
-      }
-    });
-  }
-
-  function checkPlayersOut() {
-    const scores = document.querySelectorAll(".score");
-    let outPlayers = [];
-    scores.forEach((scoreEl, index) => {
-      if (parseInt(scoreEl.textContent) >= 101) {
-        outPlayers.push(index);
-      }
-    });
-
-    const count = scores.length;
-    if (!gameOver && outPlayers.length >= count - 1) {
-      gameOver = true;
-      winnerIndex = scores.findIndex((scoreEl, idx) => !outPlayers.includes(idx));
-      renderPlayers();
-      return;
-    }
-
-    outPlayers.forEach((playerIndex) => {
-      if (!playersPendingEntry.has(playerIndex)) {
-        playersPendingEntry.set(playerIndex, null);
-        renderPlayers();
-      }
-    });
-  }
-
-  function entryDecision(playerIndex, decision, btn) {
-    if (!playersPendingEntry.has(playerIndex)) return;
-
-    const parent = btn.parentElement;
-    [...parent.children].forEach((b) => b.classList.remove("selected"));
-    btn.classList.add("selected");
-
-    if (decision) {
-      const scores = Array.from(document.querySelectorAll(".score")).map((el) =>
-        parseInt(el.textContent)
-      );
-
-      const activeScores = scores.filter((score, idx) => {
-        return score < 101 && idx !== playerIndex;
-      });
-      const maxActiveScore = activeScores.length > 0 ? Math.max(...activeScores) : 0;
-
-      const players = JSON.parse(localStorage.getItem("apuntadoGame"));
-      if (players && players.players[playerIndex]) {
-        players.players[playerIndex].score = maxActiveScore;
-        localStorage.setItem("apuntadoGame", JSON.stringify(players));
-      }
-
-      playersPendingEntry.delete(playerIndex);
-      renderPlayers();
     } else {
-      playersPendingEntry.delete(playerIndex);
-      renderPlayers();
+      player.innerHTML = `
+        <div class="name-zone">
+          <input value="${savedData?.players[i]?.name || `Jugador ${i + 1}`}" ${gameOver ? "disabled" : ""}>
+        </div>
+        <div class="divider"></div>
+        <div class="score-zone">
+          <div class="score">${savedData?.players[i]?.score ?? 0}</div>
+          ${isWinner ? `<div class="winner-label">GANADOR</div>` : ""}
+        </div>
+      `;
     }
-  }
 
-  // ——————————————————————
-  // FUNCIONES DE GUARDADO Y DESHACER
-  // ——————————————————————
-  function saveSnapshot() {
-    return localStorage.getItem("apuntadoGame");
-  }
-
-  function undoLast() {
-    if (history.length === 0) {
-      if (confirm("¿Seguro que quieres deshacer la última acción?")) {
-        alert("No hay acciones para deshacer");
-      }
-      return;
+    // Click para sumar/restar si jugador activo y juego no acabado
+    if (!gameOver && !isOut) {
+      const scoreZone = player.querySelector(".score-zone");
+      const scoreElement = player.querySelector(".score");
+      scoreZone.onclick = () => {
+        currentScoreElement = scoreElement;
+        pointsInput.value = "";
+        modal.style.display = "flex";
+        pointsInput.focus();
+      };
     }
-    const last = history.pop();
-    if (last) {
-      localStorage.setItem("apuntadoGame", last);
-      gameOver = false;
-      winnerIndex = null;
-      playersPendingEntry.clear();
-      renderPlayers();
-    }
-  }
 
-  function confirmReset() {
-    if (confirm("¿Seguro que quieres reiniciar el juego?")) {
-      localStorage.removeItem("apuntadoGame");
-      localStorage.removeItem("apuntadoPlayerCount");
-      history = [];
-      gameOver = false;
-      winnerIndex = null;
-      playersPendingEntry.clear();
-      renderPlayers();
-    }
+    playersContainer.appendChild(player);
   }
+}
 
-  function saveGame() {
-    const players = [];
-    document.querySelectorAll(".player").forEach((p) => {
-      players.push({
-        name: p.querySelector("input").value,
-        score: p.querySelector(".score").textContent,
-      });
+function applyPoints(multiplier) {
+  const value = parseInt(pointsInput.value);
+  if (!isNaN(value)) {
+    history.push(saveSnapshot());
+
+    currentScoreElement.textContent =
+      parseInt(currentScoreElement.textContent) + value * multiplier;
+
+    saveCurrentState();
+
+    checkWinner();
+    checkPlayersOut();
+  }
+  closeModal();
+}
+
+function saveCurrentState() {
+  const players = [];
+  document.querySelectorAll(".player").forEach((p) => {
+    players.push({
+      name: p.querySelector("input").value,
+      score: parseInt(p.querySelector(".score").textContent),
     });
-    localStorage.setItem(
-      "apuntadoGame",
-      JSON.stringify({
-        count: selector.value,
-        players,
-      })
+  });
+  localStorage.setItem(
+    "apuntadoGame",
+    JSON.stringify({
+      count: selector.value,
+      players,
+    })
+  );
+}
+
+function checkWinner() {
+  const scores = document.querySelectorAll(".score");
+  scores.forEach((scoreEl, index) => {
+    const value = parseInt(scoreEl.textContent);
+    if (value <= -51 && !gameOver) {
+      gameOver = true;
+      winnerIndex = index;
+      renderPlayers();
+    }
+  });
+}
+
+function checkPlayersOut() {
+  const scores = document.querySelectorAll(".score");
+  let outPlayers = [];
+  scores.forEach((scoreEl, index) => {
+    if (parseInt(scoreEl.textContent) >= 101) {
+      outPlayers.push(index);
+    }
+  });
+
+  // Si todos menos uno están fuera, ese es ganador
+  const count = scores.length;
+  if (!gameOver && outPlayers.length >= count - 1) {
+    gameOver = true;
+    winnerIndex = scores.findIndex(
+      (scoreEl, idx) => !outPlayers.includes(idx)
     );
-    alert("Partida guardada");
+    renderPlayers();
+    return;
+  }
+
+  // Para cada jugador fuera que no tenga pendiente entrada, pedir decisión
+  outPlayers.forEach((playerIndex) => {
+    if (!playersPendingEntry.has(playerIndex)) {
+      playersPendingEntry.set(playerIndex, null);
+      renderPlayers();
+    }
+  });
+}
+
+function entryDecision(playerIndex, decision, btn) {
+  if (!playersPendingEntry.has(playerIndex)) return;
+
+  // Destacar selección
+  const parent = btn.parentElement;
+  [...parent.children].forEach((b) => b.classList.remove("selected"));
+  btn.classList.add("selected");
+
+  if (decision) {
+    // Si entra, puntaje al máximo de jugadores activos (menos él)
+    const scores = Array.from(
+      document.querySelectorAll(".score")
+    ).map((el) => parseInt(el.textContent));
+
+    const activeScores = scores.filter((score, idx) => {
+      return score < 101 && idx !== playerIndex;
+    });
+    const maxActiveScore = activeScores.length > 0 ? Math.max(...activeScores) : 0;
+
+    const players = JSON.parse(localStorage.getItem("apuntadoGame"));
+    if (players && players.players[playerIndex]) {
+      players.players[playerIndex].score = maxActiveScore;
+      localStorage.setItem("apuntadoGame", JSON.stringify(players));
+    }
+
+    playersPendingEntry.delete(playerIndex);
+    renderPlayers();
+  } else {
+    playersPendingEntry.delete(playerIndex);
     renderPlayers();
   }
+}
 
-  // ——————————————————————
-  // EVENTOS
-  // ——————————————————————
-  selector.innerHTML = `
-    <option value="2">2 jugadores</option>
-    <option value="3">3 jugadores</option>
-    <option value="4">4 jugadores</option>
-    <option value="5">5 jugadores</option>
-    <option value="6">6 jugadores</option>
-  `;
+function saveSnapshot() {
+  return localStorage.getItem("apuntadoGame");
+}
 
-  selector.onchange = () => {
-    const changePlayers = confirm(
-      "¿Estás seguro que quieres cambiar la cantidad de jugadores? Esto reiniciará la partida."
-    );
-    if (changePlayers) {
-      gameOver = false;
-      winnerIndex = null;
-      playersPendingEntry.clear();
-      localStorage.removeItem("apuntadoGame");
-      localStorage.setItem("apuntadoPlayerCount", selector.value);
-      renderPlayers();
-    } else {
-      // Revertir selector al valor guardado o inicial
-      const savedCount = localStorage.getItem("apuntadoPlayerCount") || "2";
-      selector.value = savedCount;
+function undoLast() {
+  if (history.length === 0) {
+    if (confirm("¿Seguro que quieres deshacer la última acción?")) {
+      alert("No hay acciones para deshacer");
     }
-  };
-
-  modal.onclick = (e) => {
-    if (e.target === modal) closeModal();
-  };
-
-  function closeModal() {
-    modal.style.display = "none";
+    return;
   }
+  const last = history.pop();
+  if (last) {
+    localStorage.setItem("apuntadoGame", last);
+    gameOver = false;
+    winnerIndex = null;
+    playersPendingEntry.clear();
+    renderPlayers();
+  }
+}
 
-  function showRules() {
-    alert(
-      "APUNTADO\n\n" +
+function confirmReset() {
+  if (confirm("¿Seguro que quieres reiniciar el juego?")) {
+    localStorage.removeItem("apuntadoGame");
+    localStorage.removeItem("apuntadoPlayerCount");
+    history = [];
+    gameOver = false;
+    winnerIndex = null;
+    playersPendingEntry.clear();
+    renderPlayers();
+  }
+}
+
+function saveGame() {
+  const players = [];
+  document.querySelectorAll(".player").forEach((p) => {
+    players.push({
+      name: p.querySelector("input").value,
+      score: parseInt(p.querySelector(".score").textContent),
+    });
+  });
+  localStorage.setItem(
+    "apuntadoGame",
+    JSON.stringify({
+      count: selector.value,
+      players,
+    })
+  );
+  alert("Partida guardada");
+  renderPlayers();
+}
+
+function closeModal() {
+  modal.style.display = "none";
+}
+
+modal.onclick = (e) => {
+  if (e.target === modal) closeModal();
+};
+
+function showRules() {
+  alert(
+    "APUNTADO\n\n" +
       "• Gana quien llegue a −51 puntos\n" +
       "• Gana quien quede solo sin jugadores activos (los demás con 101 o más puntos)\n" +
       "• Toca el nombre para editarlo\n" +
       "• Toca el puntaje para sumar o restar\n" +
       "• DESHACER sigue activo tras ganar"
-    );
+  );
+}
+
+selector.onchange = () => {
+  if (
+    confirm(
+      "Cambiar la cantidad de jugadores reiniciará el juego. ¿Estás seguro?"
+    )
+  ) {
+    gameOver = false;
+    winnerIndex = null;
+    playersPendingEntry.clear();
+    localStorage.removeItem("apuntadoGame");
+    localStorage.setItem("apuntadoPlayerCount", selector.value);
+    history = [];
+    renderPlayers();
+  } else {
+    // Si cancela, restaurar selección anterior
+    const savedCount = localStorage.getItem("apuntadoPlayerCount") || "2";
+    selector.value = savedCount;
   }
+};
 
-  // ——————————————————————
-  // INICIALIZACIÓN
-  // ——————————————————————
-  // Si hay cantidad guardada, usarla, sino 2 jugadores
-  selector.value = localStorage.getItem("apuntadoPlayerCount") || "2";
-
-  renderPlayers();
+renderPlayers();
 </script>
 
 </body>
