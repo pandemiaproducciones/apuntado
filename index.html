@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-/* (El mismo CSS que antes, no cambia nada aquí) */
+/* (Mismo CSS que antes) */
 * {
   box-sizing: border-box;
   font-family: Arial, sans-serif;
@@ -556,8 +556,11 @@ function handleReingreso(decision) {
       scoreElement.classList.remove("out");
       saveGame();
       modal.style.display = "none";
+
+      // Limpieza para evitar bloqueo
       applyPointsForReingreso = null;
       reingresoJugadorIndex = null;
+
       checkWinnerAfterReingreso();
     };
 
@@ -587,6 +590,8 @@ function checkWinnerAfterReingreso() {
 
 function closeModal() {
   modal.style.display = "none";
+  applyPointsForReingreso = null; // limpieza para no bloquear después
+  // Restaurar eventos normales a botones modal
   const buttons = modal.querySelectorAll(".modal-buttons button");
   buttons[0].onclick = () => applyPoints(1);
   buttons[1].onclick = () => applyPoints(-1);
@@ -639,6 +644,15 @@ btnPlay.onclick = () => {
   namesEdited = false;
   alert("¡A jugar!");
 };
+
+function onPlayClick() {
+  if (namesEdited) {
+    saveGame();
+    updatePlayButtonState(false);
+    namesEdited = false;
+    alert("¡A jugar!");
+  }
+}
 
 function checkWinner() {
   const scores = document.querySelectorAll(".score");
