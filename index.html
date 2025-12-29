@@ -87,11 +87,6 @@ button {
   font-weight: bold;
 }
 
-.player.winner .score {
-  color: #d4af37;
-  font-weight: bold;
-}
-
 .name-zone input {
   width: 100%;
   background: transparent;
@@ -234,7 +229,13 @@ button {
 <header>
   <h1>APUNTADO</h1>
   <div class="controls">
-    <select id="playerCount"></select>
+    <select id="playerCount">
+      <option value="2">2 jugadores</option>
+      <option value="3">3 jugadores</option>
+      <option value="4">4 jugadores</option>
+      <option value="5">5 jugadores</option>
+      <option value="6">6 jugadores</option>
+    </select>
     <button onclick="showRules()">Reglas</button>
     <button class="btn-play" onclick="saveGame()">JUGAR</button>
   </div>
@@ -271,28 +272,10 @@ let winnerIndex = null;
 // Jugadores que deben decidir si quieren volver a entrar
 const playersPendingEntry = new Map();
 
-function populatePlayerCountOptions() {
-  // Agrega opciones 2 a 6 para selector
-  for (let i = 2; i <= 6; i++) {
-    const option = document.createElement("option");
-    option.value = i;
-    option.textContent = `${i} jugadores`;
-    selector.appendChild(option);
-  }
-}
-populatePlayerCountOptions();
-
 function renderPlayers() {
   playersContainer.innerHTML = "";
 
-  // Leer guardado
-  let saved = localStorage.getItem("apuntadoGame");
-  const savedCount = localStorage.getItem("apuntadoPlayerCount");
-
-  if (savedCount && savedCount !== selector.value) {
-    saved = null; // evitar conflicto si cambió la cantidad
-  }
-
+  const saved = localStorage.getItem("apuntadoGame");
   const savedData = saved ? JSON.parse(saved) : null;
 
   if (savedData) selector.value = savedData.count;
@@ -302,7 +285,8 @@ function renderPlayers() {
   for (let i = 0; i < count; i++) {
     const player = document.createElement("div");
 
-    const isOut = savedData?.players[i]?.score >= 101;
+    const playerScore = savedData?.players[i]?.score ?? 0;
+    const isOut = playerScore >= 101;
     const isWinner = gameOver && i === winnerIndex;
 
     player.className = "player";
@@ -315,7 +299,6 @@ function renderPlayers() {
     }
     if (isOut) {
       player.classList.add("out");
-      // Si está pendiente decidir, mostrar opciones
       if (playersPendingEntry.has(i)) {
         player.innerHTML = `
           <div class="name-zone">
@@ -323,10 +306,10 @@ function renderPlayers() {
           </div>
           <div class="divider"></div>
           <div class="score-zone">
-            <div class="score">${savedData.players[i].score}</div>
+            <div class="score">${playerScore}</div>
           </div>
           <div class="entry-overlay">
-            <div style="color:#d4af37; font-weight:bold; font-size:28px;">ENTRAR?</div>
+            <div>ENTRAR?</div>
             <div class="entry-buttons">
               <button class="yes" onclick="entryDecision(${i}, true, this)">SI</button>
               <button class="no" onclick="entryDecision(${i}, false, this)">NO</button>
@@ -340,7 +323,7 @@ function renderPlayers() {
           </div>
           <div class="divider"></div>
           <div class="score-zone">
-            <div class="score">${savedData.players[i].score}</div>
+            <div class="score">${playerScore}</div>
           </div>
         `;
       }
@@ -351,13 +334,12 @@ function renderPlayers() {
         </div>
         <div class="divider"></div>
         <div class="score-zone">
-          <div class="score">${savedData?.players[i]?.score ?? 0}</div>
+          <div class="score">${playerScore}</div>
           ${isWinner ? `<div class="winner-label">GANADOR</div>` : ""}
         </div>
       `;
     }
 
-    // Click para sumar/restar si jugador activo y juego no acabado
     if (!gameOver && !isOut) {
       const scoreZone = player.querySelector(".score-zone");
       const scoreElement = player.querySelector(".score");
@@ -377,74 +359,62 @@ function applyPoints(multiplier) {
   const value = parseInt(pointsInput.value);
   if (!isNaN(value)) {
     history.push(saveSnapshot());
-
     currentScoreElement.textContent =
       parseInt(currentScoreElement.textContent) + value * multiplier;
-
-    saveCurrentState();
-
-    checkWinner();
     checkPlayersOut();
+    checkWinner();
   }
   closeModal();
 }
 
-function saveCurrentState() {
-  const players = [];
-  document.querySelectorAll(".player").forEach((p) => {
-    players.push({
-      name: p.querySelector("input").value,
-      score: parseInt(p.querySelector(".score").textContent),
-    });
+function checkPlayersOut() {
+  const scores = Array.from(document.querySelectorAll(".score"));
+  const outPlayers = [];
+
+  scores.forEach((scoreEl, idx) => {
+    if (parseInt(scoreEl.textContent) >= 101) {
+      outPlayers.push(idx);
+    }
   });
-  localStorage.setItem(
-    "apuntadoGame",
-    JSON.stringify({
-      count: selector.value,
-      players,
-    })
-  );
+
+  // Para cada jugador fuera que no tenga pendiente entrada, pedir decisión
+  outPlayers.forEach((idx) => {
+    if (!playersPendingEntry.has(idx)) {
+      playersPendingEntry.set(idx, null);
+      renderPlayers();
+    }
+  });
 }
 
 function checkWinner() {
-  const scores = document.querySelectorAll(".score");
-  scores.forEach((scoreEl, index) => {
-    const value = parseInt(scoreEl.textContent);
-    if (value <= -51 && !gameOver) {
-      gameOver = true;
-      winnerIndex = index;
-      renderPlayers();
-    }
-  });
-}
-
-function checkPlayersOut() {
-  const scores = document.querySelectorAll(".score");
-  let outPlayers = [];
-  scores.forEach((scoreEl, index) => {
-    if (parseInt(scoreEl.textContent) >= 101) {
-      outPlayers.push(index);
-    }
-  });
-
-  // Si todos menos uno están fuera, ese es ganador
+  const scores = Array.from(document.querySelectorAll(".score"));
   const count = scores.length;
-  if (!gameOver && outPlayers.length >= count - 1) {
-    gameOver = true;
-    winnerIndex = scores.findIndex(
-      (scoreEl, idx) => !outPlayers.includes(idx)
-    );
-    renderPlayers();
-    return;
+
+  // No declarar ganador si hay jugadores pendientes de decidir
+  if (playersPendingEntry.size > 0) return;
+
+  // Revisar si alguien llegó a -51 o menos
+  for (let i = 0; i < count; i++) {
+    const val = parseInt(scores[i].textContent);
+    if (val <= -51) {
+      gameOver = true;
+      winnerIndex = i;
+      renderPlayers();
+      return;
+    }
   }
 
-  // Para cada jugador fuera que no tenga pendiente entrada, pedir decisión
-  outPlayers.forEach((playerIndex) => {
-    if (!playersPendingEntry.has(playerIndex)) {
-      playersPendingEntry.set(playerIndex, null);
-      renderPlayers();
-    }
-  });
+  // Revisar si solo queda 1 jugador activo (los demás con 101 o más)
+  const outPlayers = scores.reduce((acc, scoreEl, idx) => {
+    if (parseInt(scoreEl.textContent) >= 101) acc.push(idx);
+    return acc;
+  }, []);
+
+  if (!gameOver && outPlayers.length === count - 1) {
+    gameOver = true;
+    winnerIndex = scores.findIndex((_, idx) => !outPlayers.includes(idx));
+    renderPlayers();
+  }
 }
 
 function entryDecision(playerIndex, decision, btn) {
@@ -456,14 +426,11 @@ function entryDecision(playerIndex, decision, btn) {
   btn.classList.add("selected");
 
   if (decision) {
-    // Si entra, puntaje al máximo de jugadores activos (menos él)
-    const scores = Array.from(
-      document.querySelectorAll(".score")
-    ).map((el) => parseInt(el.textContent));
-
-    const activeScores = scores.filter((score, idx) => {
-      return score < 101 && idx !== playerIndex;
-    });
+    // Si decide entrar, actualizar puntaje al máximo de jugadores activos (menos los que están fuera)
+    const scores = Array.from(document.querySelectorAll(".score")).map(el =>
+      parseInt(el.textContent)
+    );
+    const activeScores = scores.filter((score, idx) => score < 101 && idx !== playerIndex);
     const maxActiveScore = activeScores.length > 0 ? Math.max(...activeScores) : 0;
 
     const players = JSON.parse(localStorage.getItem("apuntadoGame"));
@@ -471,10 +438,10 @@ function entryDecision(playerIndex, decision, btn) {
       players.players[playerIndex].score = maxActiveScore;
       localStorage.setItem("apuntadoGame", JSON.stringify(players));
     }
-
     playersPendingEntry.delete(playerIndex);
     renderPlayers();
   } else {
+    // Si decide no entrar, se queda fuera
     playersPendingEntry.delete(playerIndex);
     renderPlayers();
   }
@@ -504,7 +471,6 @@ function undoLast() {
 function confirmReset() {
   if (confirm("¿Seguro que quieres reiniciar el juego?")) {
     localStorage.removeItem("apuntadoGame");
-    localStorage.removeItem("apuntadoPlayerCount");
     history = [];
     gameOver = false;
     winnerIndex = null;
@@ -518,7 +484,7 @@ function saveGame() {
   document.querySelectorAll(".player").forEach((p) => {
     players.push({
       name: p.querySelector("input").value,
-      score: parseInt(p.querySelector(".score").textContent),
+      score: p.querySelector(".score").textContent,
     });
   });
   localStorage.setItem(
@@ -552,22 +518,19 @@ function showRules() {
 }
 
 selector.onchange = () => {
-  if (
-    confirm(
-      "Cambiar la cantidad de jugadores reiniciará el juego. ¿Estás seguro?"
-    )
-  ) {
+  if (confirm("Cambiar la cantidad de jugadores reiniciará el juego. ¿Quieres continuar?")) {
     gameOver = false;
     winnerIndex = null;
     playersPendingEntry.clear();
     localStorage.removeItem("apuntadoGame");
     localStorage.setItem("apuntadoPlayerCount", selector.value);
-    history = [];
     renderPlayers();
   } else {
-    // Si cancela, restaurar selección anterior
-    const savedCount = localStorage.getItem("apuntadoPlayerCount") || "2";
-    selector.value = savedCount;
+    // Si cancela, volver a valor anterior guardado (si hay)
+    const savedCount = localStorage.getItem("apuntadoPlayerCount");
+    if (savedCount) {
+      selector.value = savedCount;
+    }
   }
 };
 
