@@ -71,6 +71,20 @@ button {
   padding: 10px;
   display: flex;
   flex-direction: column;
+  transition: opacity 0.3s, border 0.3s;
+}
+
+.player.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.player.winner {
+  border: 2px solid #d4af37;
+}
+
+.player.winner input {
+  font-weight: bold;
 }
 
 .name-zone input {
@@ -177,12 +191,7 @@ button {
 <!-- MODAL -->
 <div class="modal" id="modal">
   <div class="modal-content">
-    <input
-      id="pointsInput"
-      type="number"
-      inputmode="numeric"
-      placeholder="Puntos"
-    >
+    <input id="pointsInput" type="number" inputmode="numeric" placeholder="Puntos">
     <div class="modal-buttons">
       <button onclick="applyPoints(1)">+ Sumar</button>
       <button onclick="applyPoints(-1)">− Restar</button>
@@ -198,6 +207,8 @@ const pointsInput = document.getElementById("pointsInput");
 
 let currentScoreElement = null;
 let history = [];
+let gameOver = false;
+let winnerIndex = null;
 
 function renderPlayers() {
   playersContainer.innerHTML = "";
@@ -209,16 +220,24 @@ function renderPlayers() {
 
   const count = parseInt(selector.value);
 
-  for (let i = 1; i <= count; i++) {
+  for (let i = 0; i < count; i++) {
     const player = document.createElement("div");
     player.className = "player";
 
-    const name = savedData?.players[i-1]?.name || `Jugador ${i}`;
-    const score = savedData?.players[i-1]?.score || 0;
+    if (gameOver) {
+      if (i === winnerIndex) {
+        player.classList.add("winner");
+      } else {
+        player.classList.add("disabled");
+      }
+    }
+
+    const name = savedData?.players[i]?.name || `Jugador ${i + 1}`;
+    const score = savedData?.players[i]?.score || 0;
 
     player.innerHTML = `
       <div class="name-zone">
-        <input value="${name}">
+        <input value="${name}" ${gameOver ? "disabled" : ""}>
       </div>
       <div class="divider"></div>
       <div class="score-zone">
@@ -226,12 +245,17 @@ function renderPlayers() {
       </div>
     `;
 
-    player.querySelector(".score-zone").onclick = () => {
-      currentScoreElement = player.querySelector(".score");
-      pointsInput.value = "";
-      modal.style.display = "flex";
-      pointsInput.focus();
-    };
+    const scoreZone = player.querySelector(".score-zone");
+    const scoreElement = player.querySelector(".score");
+
+    if (!gameOver) {
+      scoreZone.onclick = () => {
+        currentScoreElement = scoreElement;
+        pointsInput.value = "";
+        modal.style.display = "flex";
+        pointsInput.focus();
+      };
+    }
 
     playersContainer.appendChild(player);
   }
@@ -240,20 +264,58 @@ function renderPlayers() {
 function applyPoints(multiplier) {
   const value = parseInt(pointsInput.value);
   if (!isNaN(value)) {
-    history.push(localStorage.getItem("apuntadoGame"));
+    history.push(saveSnapshot());
     currentScoreElement.textContent =
       parseInt(currentScoreElement.textContent) + value * multiplier;
+    checkWinner();
   }
   closeModal();
 }
 
-function closeModal() {
-  modal.style.display = "none";
+function checkWinner() {
+  const scores = document.querySelectorAll(".score");
+  scores.forEach((scoreEl, index) => {
+    const value = parseInt(scoreEl.textContent);
+    if (value <= -51 && !gameOver) {
+      gameOver = true;
+      winnerIndex = index;
+      showWinner(index, value);
+    }
+  });
 }
 
-modal.onclick = e => {
-  if (e.target === modal) closeModal();
-};
+function showWinner(index, score) {
+  alert(`GANADOR\n\n${document.querySelectorAll(".name-zone input")[index].value}\n${score} puntos`);
+  renderPlayers();
+}
+
+function saveSnapshot() {
+  return localStorage.getItem("apuntadoGame");
+}
+
+function undoLast() {
+  if (history.length === 0) {
+    alert("No hay acciones para deshacer");
+    return;
+  }
+  const last = history.pop();
+  if (last) {
+    localStorage.setItem("apuntadoGame", last);
+    gameOver = false;
+    winnerIndex = null;
+    renderPlayers();
+  }
+}
+
+function confirmReset() {
+  if (confirm("¿Seguro que quieres reiniciar el juego?")) {
+    localStorage.removeItem("apuntadoGame");
+    history = [];
+    gameOver = false;
+    winnerIndex = null;
+    renderPlayers();
+  }
+}
 
 function saveGame() {
   const players = [];
@@ -270,27 +332,30 @@ function saveGame() {
   alert("Partida guardada");
 }
 
-function undoLast() {
-  alert("Deshacer (pendiente de mejora)");
+function closeModal() {
+  modal.style.display = "none";
 }
 
-function confirmReset() {
-  if (confirm("¿Seguro que quieres reiniciar el juego?")) {
-    localStorage.removeItem("apuntadoGame");
-    renderPlayers();
-  }
-}
+modal.onclick = e => {
+  if (e.target === modal) closeModal();
+};
 
 function showRules() {
   alert(
     "APUNTADO\n\n" +
+    "• Gana quien llegue a −51 puntos\n" +
     "• Toca el nombre para editarlo\n" +
     "• Toca el puntaje para sumar o restar\n" +
-    "• JUGAR guarda la partida"
+    "• DESHACER sigue activo tras ganar"
   );
 }
 
-selector.onchange = renderPlayers;
+selector.onchange = () => {
+  gameOver = false;
+  winnerIndex = null;
+  renderPlayers();
+};
+
 renderPlayers();
 </script>
 
