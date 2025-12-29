@@ -49,6 +49,18 @@ button {
   cursor: pointer;
 }
 
+/* BOTÓN PRINCIPAL */
+.btn-play {
+  background: #0f3d2e;
+  border-color: #1e6f4c;
+}
+
+/* BOTONES PELIGROSOS */
+.btn-danger {
+  background: #3a0d0d;
+  border-color: #7a1f1f;
+}
+
 .players {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -92,7 +104,6 @@ button {
   font-weight: bold;
 }
 
-/* CONTROLES INFERIORES */
 .bottom-controls {
   display: flex;
   justify-content: center;
@@ -121,9 +132,9 @@ button {
 
 .modal-content input {
   width: 100%;
-  padding: 10px;
-  font-size: 20px;
-  margin-bottom: 10px;
+  padding: 12px;
+  font-size: 22px;
+  margin-bottom: 12px;
   text-align: center;
   background: #000;
   color: #fff;
@@ -154,18 +165,17 @@ button {
       <option value="6">6 jugadores</option>
     </select>
     <button onclick="showRules()">Reglas</button>
-    <button onclick="saveGame()">JUGAR</button>
+    <button class="btn-play" onclick="saveGame()">JUGAR</button>
   </div>
 </header>
 
 <div class="players" id="players"></div>
 
 <div class="bottom-controls">
-  <button onclick="undoLast()">DESHACER</button>
-  <button onclick="confirmReset()">REINICIAR</button>
+  <button class="btn-danger" onclick="undoLast()">DESHACER</button>
+  <button class="btn-danger" onclick="confirmReset()">REINICIAR</button>
 </div>
 
-<!-- MODAL -->
 <div class="modal" id="modal">
   <div class="modal-content" id="modalContent"></div>
 </div>
@@ -218,7 +228,13 @@ function renderPlayers() {
 function openPointsModal(scoreElement) {
   currentScoreElement = scoreElement;
   modalContent.innerHTML = `
-    <input type="number" id="pointsInput" placeholder="Puntos">
+    <input 
+      type="number"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      id="pointsInput"
+      placeholder="Puntos"
+    >
     <div class="modal-buttons">
       <button onclick="applyPoints(1)">+ Sumar</button>
       <button onclick="applyPoints(-1)">− Restar</button>
@@ -231,7 +247,7 @@ function applyPoints(multiplier) {
   const input = document.getElementById("pointsInput");
   const value = parseInt(input.value);
   if (!isNaN(value)) {
-    history.push(saveSnapshot());
+    history.push(localStorage.getItem("apuntadoGame"));
     currentScoreElement.textContent =
       parseInt(currentScoreElement.textContent) + value * multiplier;
   }
@@ -251,10 +267,6 @@ function saveGame() {
     players
   }));
   alert("Partida guardada");
-}
-
-function saveSnapshot() {
-  return localStorage.getItem("apuntadoGame");
 }
 
 function undoLast() {
@@ -316,7 +328,6 @@ function showRules() {
 }
 
 selector.onchange = renderPlayers;
-
 renderPlayers();
 </script>
 
