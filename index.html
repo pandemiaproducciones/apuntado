@@ -1,145 +1,140 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>APUNTADO</title>
 
 <style>
+/* ========= RESET SANO ========= */
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 html, body {
-  margin: 0;
-  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden; /* 🔒 clave */
   background: #000;
   color: #fff;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  overflow-x: hidden;
 }
 
-/* margen lateral real */
+/* ========= CONTENEDOR ========= */
 .app {
-  padding: 6px;
-  max-width: 100vw;
+  width: 100%;
+  min-height: 100vh;
+  padding: 6px; /* margen lateral fino */
+  display: flex;
+  flex-direction: column;
 }
 
-/* HEADER */
+/* ========= HEADER ========= */
 header {
   text-align: center;
   margin-bottom: 10px;
 }
 
 header h1 {
-  margin: 5px 0;
-  font-size: 26px;
+  font-size: 28px;
   letter-spacing: 2px;
 }
 
-/* CONTROLES SUPERIORES */
-.top-controls {
+/* ========= CONTROLES ========= */
+.controls {
   display: flex;
-  gap: 6px;
   justify-content: center;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 10px;
 }
 
 select, button {
-  background: #000;
+  background: #111;
   color: #fff;
   border: 1px solid #444;
-  padding: 8px 10px;
-  font-size: 14px;
+  padding: 8px 12px;
+  font-size: 16px;
+  border-radius: 6px;
 }
 
 button:active {
   transform: scale(0.97);
 }
 
-#undoBtn {
-  border-color: #ff9800;
-  color: #ff9800;
-}
-
-/* GRID JUGADORES */
-.players {
+/* ========= TABLERO ========= */
+.board {
+  flex: 1;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 6px;
 }
 
-/* TARJETA JUGADOR */
+/* ========= JUGADOR ========= */
 .player {
-  border: 1px solid #444;
+  border: 1px solid #333;
+  border-radius: 8px;
   padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-height: 110px;
+  justify-content: space-between;
+  min-height: 120px;
 }
 
-.player.inactive {
-  opacity: 0.35;
-  pointer-events: none;
-}
-
-.player.winner {
-  border-color: gold;
-}
-
-.player.winner .name {
-  font-weight: bold;
-}
-
-/* NOMBRE */
-.name {
+/* Nombre */
+.player-name {
   text-align: center;
-  font-size: 14px;
-  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 18px;
   outline: none;
 }
 
+/* Línea divisora */
 .divider {
   height: 1px;
   background: #333;
+  margin: 6px 0;
 }
 
-/* PUNTAJE */
+/* Puntaje */
 .score {
   text-align: center;
-  font-size: 26px;
+  font-size: 28px;
   outline: none;
 }
 
 /* ENTRADAS */
 .entry {
   text-align: center;
-  font-size: 11px;
-  color: #ffeb3b;
+  font-size: 12px;
+  color: #ffd700;
 }
 
-/* CONTROLES JUGADOR */
-.controls {
+/* Ganador */
+.winner {
+  border-color: gold;
+}
+
+.winner .player-name {
+  font-weight: 900;
+}
+
+.disabled {
+  opacity: 0.35;
+}
+
+/* ========= FOOTER ========= */
+footer {
+  margin-top: 10px;
   display: flex;
-  gap: 6px;
   justify-content: center;
 }
 
-.controls button {
-  flex: 1;
-  font-size: 16px;
-}
-
-/* FOOTER */
-footer {
-  margin-top: 10px;
-  text-align: center;
-}
-
-#resetBtn {
-  border-color: #ff3b3b;
-  color: #ff3b3b;
+footer button {
+  border-color: #700;
+  color: #f88;
 }
 </style>
 </head>
@@ -151,20 +146,19 @@ footer {
   <h1>APUNTADO</h1>
 </header>
 
-<div class="top-controls">
+<div class="controls">
+  <label>Jugadores</label>
   <select id="playerCount">
-    <option value="">JUGADORES</option>
     <option value="2">2</option>
     <option value="3">3</option>
     <option value="4">4</option>
     <option value="5">5</option>
     <option value="6">6</option>
   </select>
-
   <button id="undoBtn">DESHACER</button>
 </div>
 
-<div class="players" id="players"></div>
+<div class="board" id="board"></div>
 
 <footer>
   <button id="resetBtn">REINICIAR</button>
@@ -173,140 +167,42 @@ footer {
 </div>
 
 <script>
-let state = JSON.parse(localStorage.getItem("apuntado")) || null;
+const board = document.getElementById('board');
+const playerCount = document.getElementById('playerCount');
 let history = [];
 
-const playersDiv = document.getElementById("players");
-const countSelect = document.getElementById("playerCount");
-
-function save() {
-  localStorage.setItem("apuntado", JSON.stringify(state));
+/* ========= CREAR JUGADORES ========= */
+function createPlayers(count) {
+  board.innerHTML = '';
+  for (let i = 1; i <= count; i++) {
+    const div = document.createElement('div');
+    div.className = 'player';
+    div.innerHTML = `
+      <div class="player-name" contenteditable>NOMBRE ${i}</div>
+      <div class="entry"></div>
+      <div class="divider"></div>
+      <div class="score" contenteditable>0</div>
+    `;
+    board.appendChild(div);
+    bindPlayer(div);
+  }
 }
 
-function pushHistory() {
-  history.push(JSON.stringify(state));
-  if (history.length > 30) history.shift();
-}
+/* ========= EVENTOS ========= */
+function bindPlayer(player) {
+  const name = player.querySelector('.player-name');
+  const score = player.querySelector('.score');
 
-function undo() {
-  if (!history.length) return;
-  state = JSON.parse(history.pop());
-  save();
-  render();
-}
+  name.addEventListener('focus', () => selectAll(name));
+  score.addEventListener('focus', () => selectAll(score));
 
-function reset() {
-  if (!confirm("¿REINICIAR JUEGO?")) return;
-  localStorage.removeItem("apuntado");
-  state = null;
-  render();
-}
-
-document.getElementById("undoBtn").onclick = undo;
-document.getElementById("resetBtn").onclick = reset;
-
-countSelect.onchange = () => {
-  const n = Number(countSelect.value);
-  if (!n) return;
-
-  state = {
-    players: Array.from({ length: n }, (_, i) => ({
-      name: `NOMBRE ${i + 1}`,
-      score: 0,
-      active: true,
-      entry: false
-    }))
-  };
-  save();
-  render();
-};
-
-function render() {
-  playersDiv.innerHTML = "";
-  if (!state) return;
-
-  state.players.forEach((p, i) => {
-    const div = document.createElement("div");
-    div.className = "player";
-    if (!p.active) div.classList.add("inactive");
-
-    // ganador
-    if (p.score <= -51 || state.players.filter(x => x.active && x !== p).every(x => x.score >= 101)) {
-      div.classList.add("winner");
-      state.players.forEach(x => { if (x !== p) x.active = false; });
-    }
-
-    const name = document.createElement("div");
-    name.className = "name";
-    name.contentEditable = true;
-    name.textContent = p.name;
-    name.onfocus = () => selectAll(name);
-    name.oninput = () => {
-      pushHistory();
-      p.name = name.textContent.toUpperCase();
-      save();
-    };
-
-    const divider = document.createElement("div");
-    divider.className = "divider";
-
-    const score = document.createElement("div");
-    score.className = "score";
-    score.textContent = p.score;
-
-    const entry = document.createElement("div");
-    entry.className = "entry";
-    entry.textContent = p.entry ? "ENTRADAS" : "";
-
-    const controls = document.createElement("div");
-    controls.className = "controls";
-
-    const plus = document.createElement("button");
-    plus.textContent = "+";
-    plus.onclick = () => changeScore(i, true);
-
-    const minus = document.createElement("button");
-    minus.textContent = "−";
-    minus.onclick = () => changeScore(i, false);
-
-    controls.append(plus, minus);
-    div.append(name, divider, score, entry, controls);
-    playersDiv.appendChild(div);
+  score.addEventListener('input', () => {
+    saveState();
+    checkWinner();
   });
 }
 
-function changeScore(i, add) {
-  const p = state.players[i];
-
-  if (!p.active) {
-    const enter = confirm("¿DESEA ENTRAR?");
-    if (!enter) return;
-
-    let val = prompt("¿CON CUÁNTOS PUNTOS ENTRA?");
-    if (val === null) return;
-    val = Number(val);
-    if (isNaN(val)) return;
-
-    pushHistory();
-    p.score = val;
-    p.active = true;
-    p.entry = true;
-    save();
-    render();
-    return;
-  }
-
-  let val = prompt(add ? "SUMAR PUNTOS" : "RESTAR PUNTOS");
-  if (val === null) return;
-  val = Number(val);
-  if (isNaN(val)) return;
-
-  pushHistory();
-  p.score += add ? val : -val;
-  save();
-  render();
-}
-
+/* ========= UTIL ========= */
 function selectAll(el) {
   const range = document.createRange();
   range.selectNodeContents(el);
@@ -315,7 +211,54 @@ function selectAll(el) {
   sel.addRange(range);
 }
 
-render();
+function saveState() {
+  history.push(board.innerHTML);
+}
+
+function undo() {
+  if (history.length > 0) {
+    board.innerHTML = history.pop();
+    document.querySelectorAll('.player').forEach(bindPlayer);
+  }
+}
+
+/* ========= GANADOR ========= */
+function checkWinner() {
+  const players = document.querySelectorAll('.player');
+  let active = [];
+
+  players.forEach(p => {
+    const score = parseInt(p.querySelector('.score').innerText) || 0;
+    p.classList.remove('winner', 'disabled');
+    if (score <= -51) active.push(p);
+  });
+
+  if (active.length === 1) {
+    active[0].classList.add('winner');
+    players.forEach(p => {
+      if (p !== active[0]) p.classList.add('disabled');
+    });
+  }
+}
+
+/* ========= BOTONES ========= */
+playerCount.addEventListener('change', () => {
+  createPlayers(parseInt(playerCount.value));
+  history = [];
+});
+
+document.getElementById('undoBtn').onclick = undo;
+
+document.getElementById('resetBtn').onclick = () => {
+  if (confirm('¿Reiniciar el juego?')) {
+    createPlayers(parseInt(playerCount.value));
+    history = [];
+  }
+};
+
+/* ========= INICIO ========= */
+createPlayers(parseInt(playerCount.value));
 </script>
+
 </body>
 </html>
