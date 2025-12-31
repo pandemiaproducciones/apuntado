@@ -1,240 +1,390 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
 <title>APUNTADO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root{
-  --bg:#000;
-  --fg:#fff;
-  --line:#333;
-  --green:#1f7a3f;
-  --red:#7a1f1f;
-  --gold:#d4af37;
-  --orange:#b87333;
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
 }
 
-*{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont;}
-
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--fg);
+body {
+  margin: 0;
+  background: #000;
+  color: #fff;
+  min-height: 100vh;
 }
 
-header{
-  padding:10px;
-  display:flex;
-  gap:10px;
-  align-items:center;
+header {
+  text-align: center;
+  padding: 12px;
 }
 
-select,button,input{
-  background:#000;
-  color:#fff;
-  border:1px solid var(--line);
-  padding:6px 10px;
-  font-size:16px;
+h1 {
+  margin: 0 0 10px 0;
+  letter-spacing: 4px;
 }
 
-button{
-  cursor:pointer;
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-#players{
-  display:grid;
-  gap:10px;
-  padding:10px;
+select, button {
+  padding: 8px 12px;
+  font-size: 16px;
+  background: #000;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 6px;
 }
 
-.player{
-  border:1px solid var(--line);
-  padding:8px;
+button {
+  cursor: pointer;
 }
 
-.player.inactive{
-  opacity:.3;
-  pointer-events:none;
+button:disabled {
+  opacity: 0.4;
 }
 
-.player.winner{
-  border-color:var(--gold);
+.btn-undo {
+  border-color: orange;
+  color: orange;
 }
 
-.name{
-  font-weight:600;
+.btn-reset {
+  border-color: #6b2f2f;
+  color: #e5a0a0;
 }
 
-.name.winner{
-  font-weight:800;
+.players {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  height: calc(100vh - 180px);
 }
 
-.sep{
-  border-top:1px solid var(--line);
-  margin:6px 0;
+.player {
+  border: 1px solid #222;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
-.score{
-  font-size:28px;
+.player.disabled {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
-.controls{
-  display:flex;
-  gap:6px;
-  margin-top:6px;
+.player.winner {
+  border: 2px solid #d4af37;
 }
 
-.controls button{
-  flex:1;
+.name-zone {
+  text-align: center;
 }
 
-footer{
-  display:flex;
-  gap:10px;
-  padding:10px;
+.name-zone input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  text-align: center;
+  outline: none;
+  text-transform: uppercase;
 }
 
-#undo{border-color:var(--orange);color:var(--orange);}
-#reset{border-color:var(--red);color:var(--red);}
+.entradas-label {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  background: #ffeb3b;
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.divider {
+  height: 1px;
+  background: #333;
+  margin: 8px 0;
+}
+
+.score-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.score {
+  font-size: 48px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.score.out {
+  color: #e55353;
+}
+
+.winner-label {
+  margin-top: 6px;
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: #d4af37;
+  font-weight: bold;
+}
+
+.bottom-controls {
+  padding: 10px;
+  text-align: center;
+}
+
+/* MODALES */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.modal-content {
+  background: #111;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  width: 85%;
+  max-width: 320px;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 12px;
+  font-size: 22px;
+  text-align: center;
+  background: #000;
+  color: #fff;
+  border: 1px solid #333;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.modal-buttons button {
+  flex: 1;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-  <strong>APUNTADO</strong>
-  <select id="playerCount">
-    <option value="">Jugadores</option>
-    <option>2</option><option>3</option><option>4</option>
-    <option>5</option><option>6</option>
-  </select>
+  <h1>APUNTADO</h1>
+  <div class="controls">
+    <select id="playerCount">
+      <option value="2">2 JUGADORES</option>
+      <option value="3">3 JUGADORES</option>
+      <option value="4">4 JUGADORES</option>
+      <option value="5">5 JUGADORES</option>
+      <option value="6">6 JUGADORES</option>
+    </select>
+    <button class="btn-undo" onclick="undoLast()">DESHACER</button>
+  </div>
 </header>
 
-<div id="players"></div>
+<div class="players" id="players"></div>
 
-<footer>
-  <button id="undo">DESHACER</button>
-  <button id="reset">REINICIAR</button>
-</footer>
+<div class="bottom-controls">
+  <button class="btn-reset" onclick="resetGame()">REINICIAR</button>
+</div>
+
+<!-- SUMAR / RESTAR -->
+<div class="modal" id="pointsModal">
+  <div class="modal-content">
+    <input id="pointsInput" type="number" inputmode="numeric" placeholder="PUNTOS">
+    <div class="modal-buttons">
+      <button onclick="applyPoints(1)">SUMAR</button>
+      <button onclick="applyPoints(-1)">RESTAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- REINGRESO -->
+<div class="modal" id="reingresoModal">
+  <div class="modal-content">
+    <div id="reingresoText"></div>
+    <div class="modal-buttons">
+      <button onclick="confirmReingreso(true)">SI</button>
+      <button onclick="confirmReingreso(false)">NO</button>
+    </div>
+  </div>
+</div>
 
 <script>
-let state = JSON.parse(localStorage.getItem("apuntado")) || null;
-let history = [];
-
 const playersDiv = document.getElementById("players");
-const countSelect = document.getElementById("playerCount");
+const selector = document.getElementById("playerCount");
+const pointsModal = document.getElementById("pointsModal");
+const pointsInput = document.getElementById("pointsInput");
+const reingresoModal = document.getElementById("reingresoModal");
+const reingresoText = document.getElementById("reingresoText");
 
-function save(){ localStorage.setItem("apuntado", JSON.stringify(state)); }
+let currentScoreEl = null;
+let history = [];
+let reingresoIndex = null;
 
-function render(){
-  playersDiv.innerHTML="";
-  if(!state) return;
-
-  state.players.forEach((p,i)=>{
-    const d=document.createElement("div");
-    d.className="player"+(p.inactive?" inactive":"")+(p.winner?" winner":"");
-
-    const name=document.createElement("div");
-    name.contentEditable=!p.inactive;
-    name.className="name"+(p.winner?" winner":"");
-    name.textContent=p.name;
-    name.oninput=()=>{p.name=name.textContent;save();};
-
-    const sep=document.createElement("div");
-    sep.className="sep";
-
-    const score=document.createElement("div");
-    score.className="score";
-    score.textContent=p.score;
-    score.onclick=()=>{
-      if(p.inactive) return;
-      const val=prompt("¿Cuántos puntos?");
-      if(val===null) return;
-      history.push(JSON.stringify(state));
-      p.score+=Number(val);
-      checkWinner();
-      save();
-      render();
-    };
-
-    const controls=document.createElement("div");
-    controls.className="controls";
-
-    ["+","-"].forEach(sym=>{
-      const b=document.createElement("button");
-      b.textContent=sym;
-      b.onclick=()=>{
-        const v=prompt("Cantidad:");
-        if(v===null) return;
-        history.push(JSON.stringify(state));
-        p.score+= sym==="+"?Number(v):-Number(v);
-        checkWinner();
-        save();
-        render();
-      };
-      controls.appendChild(b);
+/* ---------- GUARDADO ---------- */
+function saveGame() {
+  const data = {
+    count: selector.value,
+    players: []
+  };
+  document.querySelectorAll(".player").forEach(p => {
+    data.players.push({
+      name: p.querySelector("input").value,
+      score: parseInt(p.querySelector(".score").textContent),
+      disabled: p.classList.contains("disabled"),
+      entradas: p.dataset.entradas || 0
     });
-
-    if(p.winner){
-      const w=document.createElement("div");
-      w.textContent="GANADOR";
-      w.style.color="var(--gold)";
-      controls.appendChild(w);
-    }
-
-    d.append(name,sep,score,controls);
-    playersDiv.appendChild(d);
   });
+  localStorage.setItem("apuntadoGame", JSON.stringify(data));
 }
 
-function checkWinner(){
-  state.players.forEach(p=>p.winner=false);
+function loadGame() {
+  return JSON.parse(localStorage.getItem("apuntadoGame"));
+}
 
-  const active=state.players.filter(p=>!p.inactive);
-  active.forEach(p=>{
-    if(p.score<=-51){
-      p.winner=true;
-      active.forEach(o=>{if(o!==p)o.inactive=true;});
+/* ---------- RENDER ---------- */
+function render() {
+  playersDiv.innerHTML = "";
+  const saved = loadGame();
+  const count = saved ? saved.count : selector.value;
+  selector.value = count;
+
+  for (let i = 0; i < count; i++) {
+    const p = saved?.players[i];
+    const div = document.createElement("div");
+    div.className = "player" + (p?.disabled ? " disabled" : "");
+    div.dataset.entradas = p?.entradas || 0;
+
+    div.innerHTML = `
+      <div class="name-zone">
+        <input value="${p?.name || "NOMBRE"}">
+        ${p?.entradas ? `<div class="entradas-label">ENTRADAS: ${p.entradas}</div>` : ""}
+      </div>
+      <div class="divider"></div>
+      <div class="score-zone">
+        <div class="score ${p?.disabled ? "out" : ""}">${p?.score || 0}</div>
+      </div>
+    `;
+
+    const score = div.querySelector(".score");
+    if (!p?.disabled) {
+      score.onclick = () => {
+        currentScoreEl = score;
+        pointsInput.value = "";
+        pointsModal.style.display = "flex";
+        pointsInput.focus();
+      };
     }
-  });
 
-  const alive=active.filter(p=>p.score<=100);
-  if(alive.length===1){
-    alive[0].winner=true;
-    active.forEach(o=>{if(o!==alive[0])o.inactive=true;});
+    playersDiv.appendChild(div);
   }
 }
 
-countSelect.onchange=()=>{
-  const n=Number(countSelect.value);
-  if(!n) return;
-  state={players:[]};
-  for(let i=1;i<=n;i++) state.players.push({name:"Jugador "+i,score:0,inactive:false,winner:false});
-  save();
-  render();
-};
+/* ---------- PUNTOS ---------- */
+function applyPoints(mult) {
+  const val = parseInt(pointsInput.value);
+  if (isNaN(val)) return;
+  history.push(localStorage.getItem("apuntadoGame"));
+  currentScoreEl.textContent =
+    parseInt(currentScoreEl.textContent) + val * mult;
+  pointsModal.style.display = "none";
+  checkOut();
+  saveGame();
+}
 
-document.getElementById("undo").onclick=()=>{
-  if(!history.length) return;
-  state=JSON.parse(history.pop());
-  save();render();
-};
+function checkOut() {
+  const players = document.querySelectorAll(".player");
+  players.forEach((p, i) => {
+    const score = parseInt(p.querySelector(".score").textContent);
+    if (score >= 101 && !p.classList.contains("disabled")) {
+      reingresoIndex = i;
+      reingresoText.textContent =
+        `¿EL JUGADOR "${p.querySelector("input").value}" DESEA INGRESAR NUEVAMENTE?`;
+      reingresoModal.style.display = "flex";
+    }
+  });
+}
 
-document.getElementById("reset").onclick=()=>{
-  if(!confirm("¿Reiniciar juego?")) return;
-  localStorage.removeItem("apuntado");
-  state=null;
-  history=[];
-  playersDiv.innerHTML="";
-  countSelect.value="";
-};
+/* ---------- REINGRESO ---------- */
+function confirmReingreso(ok) {
+  const p = document.querySelectorAll(".player")[reingresoIndex];
+  const scoreEl = p.querySelector(".score");
 
-if(state){
-  countSelect.value=state.players.length;
+  if (!ok) {
+    p.classList.add("disabled");
+    scoreEl.classList.add("out");
+    reingresoModal.style.display = "none";
+    saveGame();
+    checkWinner();
+    return;
+  }
+
+  reingresoModal.style.display = "none";
+  currentScoreEl = scoreEl;
+  pointsInput.placeholder = "¿CON CUÁNTOS PUNTOS ENTRA?";
+  pointsModal.style.display = "flex";
+  pointsInput.focus();
+
+  p.dataset.entradas = parseInt(p.dataset.entradas) + 1 || 1;
+}
+
+/* ---------- GANADOR ---------- */
+function checkWinner() {
+  const active = [...document.querySelectorAll(".player")]
+    .filter(p => !p.classList.contains("disabled"));
+  if (active.length === 1) {
+    active[0].classList.add("winner");
+    active[0].querySelector(".score-zone")
+      .insertAdjacentHTML("beforeend", `<div class="winner-label">GANADOR</div>`);
+  }
+}
+
+/* ---------- CONTROLES ---------- */
+function undoLast() {
+  if (!history.length) return;
+  localStorage.setItem("apuntadoGame", history.pop());
   render();
 }
+
+function resetGame() {
+  if (!confirm("¿REINICIAR JUEGO?")) return;
+  localStorage.removeItem("apuntadoGame");
+  history = [];
+  render();
+}
+
+selector.onchange = () => {
+  localStorage.removeItem("apuntadoGame");
+  render();
+};
+
+render();
 </script>
 
 </body>
