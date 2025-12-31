@@ -33,11 +33,13 @@ button:disabled{opacity:.4;cursor:default}
 .btn-undo{border-color:#b36b00;color:#ffb84d}
 .btn-reset{border-color:#6b2f2f;color:#e5a0a0}
 
+/* 👇 margen lateral mínimo para evitar recortes */
 .players{
   display:grid;
   grid-template-columns:repeat(2,1fr);
   grid-template-rows:repeat(3,1fr);
   height:calc(100vh - 200px);
+  padding:0 2px; /* ← margen de seguridad */
 }
 
 .player{
@@ -51,6 +53,13 @@ button:disabled{opacity:.4;cursor:default}
 .player.disabled{opacity:.35;pointer-events:none}
 .player.winner{border:2px solid #d4af37}
 
+/* 👇 bloque nombre + entradas centrado */
+.name-block{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
 .name{
   text-align:center;
   font-size:18px;
@@ -59,6 +68,16 @@ button:disabled{opacity:.4;cursor:default}
   border:none;
   color:#fff;
   outline:none;
+  text-transform:uppercase;
+}
+
+.entradas{
+  margin-top:4px;
+  background:#ffeb3b;
+  color:#000;
+  font-size:14px;
+  padding:2px 6px;
+  border-radius:6px;
 }
 
 .divider{height:1px;background:#333;margin:8px 0}
@@ -74,15 +93,6 @@ button:disabled{opacity:.4;cursor:default}
 
 .score{font-size:48px;font-weight:bold}
 .score.out{color:#e55353}
-
-.entradas{
-  margin-top:4px;
-  background:#ffeb3b;
-  color:#000;
-  font-size:14px;
-  padding:2px 6px;
-  border-radius:6px;
-}
 
 .winner-label{
   margin-top:6px;
@@ -194,8 +204,10 @@ function render(){
     }else if(p.disabled)d.classList.add("disabled");
 
     d.innerHTML=`
-      <input class="name" value="${p.name}">
-      ${p.entradas?`<div class="entradas">ENTRADAS: ${p.entradas}</div>`:""}
+      <div class="name-block">
+        <input class="name" value="${p.name}">
+        ${p.entradas?`<div class="entradas">ENTRADAS: ${p.entradas}</div>`:""}
+      </div>
       <div class="divider"></div>
       <div class="score-zone">
         <div class="score ${p.out?"out":""}">${p.score}</div>
