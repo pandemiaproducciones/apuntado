@@ -4,318 +4,273 @@
 <meta charset="UTF-8">
 <title>APUNTADO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-* { box-sizing: border-box; font-family: Arial, sans-serif; }
+* { box-sizing: border-box; }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
   background: #000;
   color: #fff;
-  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
 }
 
-header { text-align: center; padding: 15px; }
-
-h1 { letter-spacing: 4px; }
-
-.controls {
+.app {
+  min-height: 100svh;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+}
+
+header {
+  display: flex;
   gap: 10px;
-  flex-wrap: wrap;
+  padding: 10px;
 }
 
 select, button {
-  padding: 8px 12px;
-  font-size: 16px;
-  border-radius: 6px;
-  background: #000;
+  background: #111;
   color: #fff;
   border: 1px solid #333;
+  padding: 8px 12px;
+  border-radius: 6px;
 }
 
-button { cursor: pointer; }
-
-.btn-play {
-  border-color: #2f6b3f;
-  color: #9be5b1;
+button.green {
+  background: #1f7a3f;
+  border-color: #1f7a3f;
 }
 
-.btn-danger {
-  border-color: #6b2f2f;
-  color: #e5a0a0;
+button.saved {
+  background: #00a651;
+  border-color: #00a651;
+  color: #fff;
 }
 
-.players {
+button.red {
+  background: #5a1e1e;
+}
+
+#players {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  height: calc(100vh - 190px);
 }
 
 .player {
-  border: 1px solid #222;
-  padding: 10px;
+  border: 1px solid #333;
   display: flex;
   flex-direction: column;
-  transition: opacity 0.3s, border 0.3s;
+  justify-content: space-between;
+  padding: 10px;
 }
 
 .player.disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   pointer-events: none;
 }
 
 .player.winner {
-  border: 2px solid #d4af37;
+  border: 2px solid gold;
 }
 
-.player.winner input {
-  font-weight: bold;
-}
-
-.name-zone input {
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: #fff;
+.name {
   font-size: 18px;
   text-align: center;
   outline: none;
 }
 
-.divider {
-  height: 1px;
-  background: #333;
-  margin: 8px 0;
-}
-
-.score-zone {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
 .score {
-  font-size: 48px;
+  font-size: 40px;
+  text-align: center;
+  border-top: 1px solid #444;
+  padding-top: 10px;
+}
+
+.winner-text {
+  text-align: center;
+  color: gold;
   font-weight: bold;
 }
 
-.winner-label {
-  margin-top: 6px;
-  font-size: 16px;
-  letter-spacing: 2px;
-  color: #d4af37;
-  font-weight: bold;
-}
-
-.bottom-controls {
+footer {
   display: flex;
-  justify-content: center;
-  gap: 20px;
+  gap: 10px;
   padding: 10px;
 }
 
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.85);
+  background: rgba(0,0,0,0.8);
   display: none;
   align-items: center;
   justify-content: center;
+  z-index: 10;
 }
 
 .modal-content {
   background: #111;
   padding: 20px;
   border-radius: 10px;
-  width: 85%;
-  max-width: 320px;
   text-align: center;
 }
 
-.modal-content input {
+input[type=number] {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   font-size: 22px;
   background: #000;
-  color: #fff;
-  border: 1px solid #333;
-  text-align: center;
+  color: yellow;
+  border: 1px solid #444;
 }
-
-.modal-buttons {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-.modal-buttons button { flex: 1; }
 </style>
 </head>
 
 <body>
+<div class="app">
 
 <header>
-  <h1>APUNTADO</h1>
-  <div class="controls">
-    <select id="playerCount">
-      <option value="">Jugadores</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
-    </select>
-    <button class="btn-play" onclick="startGame()">JUGAR</button>
-  </div>
+  <select id="playerCount">
+    <option value="">Cantidad</option>
+    <option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+  </select>
+  <button id="saveBtn" class="green" onclick="saveGame()">GUARDAR</button>
+  <button onclick="showRules()">REGLAS</button>
 </header>
 
-<div class="players" id="players"></div>
+<div id="players"></div>
 
-<div class="bottom-controls">
-  <button class="btn-danger" onclick="undoLast()">DESHACER</button>
-  <button class="btn-danger" onclick="resetGame()">REINICIAR</button>
+<footer>
+  <button class="red" onclick="confirmReset()">REINICIAR</button>
+  <button class="red" onclick="undo()">DESHACER</button>
+</footer>
+
 </div>
 
-<div class="modal" id="modal">
+<!-- MODALES -->
+<div class="modal" id="entryModal">
   <div class="modal-content">
-    <input id="pointsInput" type="number" inputmode="numeric" placeholder="Puntos">
-    <div class="modal-buttons">
-      <button onclick="applyPoints(1)">+ Sumar</button>
-      <button onclick="applyPoints(-1)">− Restar</button>
-    </div>
+    <p>¿Cuántos puntos?</p>
+    <input type="number" id="entryPoints" inputmode="numeric">
+    <br><br>
+    <button onclick="applyEntry()">ACEPTAR</button>
   </div>
 </div>
 
 <script>
-const playersDiv = document.getElementById("players");
-const modal = document.getElementById("modal");
-const pointsInput = document.getElementById("pointsInput");
-const selector = document.getElementById("playerCount");
-
 let players = [];
 let history = [];
-let currentPlayer = null;
-let gameOver = false;
+let currentIndex = null;
+let savedOnce = false;
 
-function startGame() {
-  const count = parseInt(selector.value);
-  if (!count) return;
+const playersDiv = document.getElementById('players');
+const saveBtn = document.getElementById('saveBtn');
 
-  players = Array.from({ length: count }, (_, i) => ({
-    name: `Nombre ${i + 1}`,
-    score: 0,
-    active: true
-  }));
-  history = [];
-  gameOver = false;
+document.getElementById('playerCount').addEventListener('change', e => {
+  createPlayers(+e.target.value);
+});
+
+function createPlayers(n) {
+  players = [];
+  for (let i = 0; i < n; i++) {
+    players.push({ name: 'NOMBRE', score: 0, active: true });
+  }
   render();
+  autoSave();
 }
 
 function render() {
-  playersDiv.innerHTML = "";
+  playersDiv.innerHTML = '';
+  players.forEach((p, i) => {
+    const d = document.createElement('div');
+    d.className = 'player';
+    if (!p.active) d.classList.add('disabled');
+    if (p.winner) d.classList.add('winner');
+
+    d.innerHTML = `
+      <div class="name" contenteditable
+        oninput="players[${i}].name=this.innerText; autoSave()">
+        ${p.name}
+      </div>
+      <div class="score" onclick="editScore(${i})">${p.score}</div>
+      ${p.winner ? '<div class="winner-text">GANADOR</div>' : ''}
+    `;
+    playersDiv.appendChild(d);
+  });
+}
+
+function editScore(i) {
+  currentIndex = i;
+  document.getElementById('entryPoints').value = '';
+  document.getElementById('entryModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('entryPoints').focus(), 100);
+}
+
+function applyEntry() {
+  const val = +document.getElementById('entryPoints').value;
+  history.push(JSON.stringify(players));
+  players[currentIndex].score += val;
+  document.getElementById('entryModal').style.display = 'none';
+  checkWinner();
+  render();
+  autoSave();
+}
+
+function checkWinner() {
+  const active = players.filter(p => p.active);
+  if (active.length === 1) return setWinner(players.indexOf(active[0]));
 
   players.forEach((p, i) => {
-    const div = document.createElement("div");
-    div.className = "player";
-
-    if (gameOver) {
-      if (p.winner) div.classList.add("winner");
-      else div.classList.add("disabled");
-    } else if (!p.active) {
-      div.classList.add("disabled");
-    }
-
-    div.innerHTML = `
-      <div class="name-zone">
-        <input value="${p.name}" ${gameOver || !p.active ? "disabled" : ""}>
-      </div>
-      <div class="divider"></div>
-      <div class="score-zone">
-        <div class="score">${p.score}</div>
-        ${p.winner ? `<div class="winner-label">GANADOR</div>` : ""}
-      </div>
-    `;
-
-    div.querySelector("input").oninput = e => p.name = e.target.value;
-
-    if (!gameOver && p.active) {
-      div.querySelector(".score-zone").onclick = () => {
-        currentPlayer = i;
-        pointsInput.value = "";
-        modal.style.display = "flex";
-        pointsInput.focus();
-      };
-    }
-
-    playersDiv.appendChild(div);
-  });
-}
-
-function applyPoints(mult) {
-  const val = parseInt(pointsInput.value);
-  if (isNaN(val)) return;
-
-  history.push(JSON.stringify(players));
-  players[currentPlayer].score += val * mult;
-  modal.style.display = "none";
-
-  checkStates();
-  render();
-}
-
-function checkStates() {
-  // Victoria por -51
-  players.forEach(p => {
-    if (p.score <= -51 && !gameOver) {
-      p.winner = true;
-      gameOver = true;
-    }
+    if (p.score <= -51) setWinner(i);
   });
 
-  // 101 puntos → eliminación
-  players.forEach(p => {
-    if (p.score >= 101 && p.active) {
-      if (!confirm(`"${p.name}" pasó 101. ¿Reingresa?`)) {
-        p.active = false;
-      } else {
-        const nuevo = prompt("¿Con cuántos puntos entra? (0–100)");
-        const n = parseInt(nuevo);
-        if (!isNaN(n) && n >= 0 && n <= 100) p.score = n;
-      }
-    }
-  });
-
-  // Último jugador activo
-  const activos = players.filter(p => p.active);
-  if (activos.length === 1 && !gameOver) {
-    activos[0].winner = true;
-    gameOver = true;
-  }
+  const alive = players.filter(p => p.score <= 100 && p.active);
+  if (alive.length === 1) setWinner(players.indexOf(alive[0]));
 }
 
-function undoLast() {
+function setWinner(i) {
+  players.forEach(p => { p.active = false; p.winner = false; });
+  players[i].active = true;
+  players[i].winner = true;
+}
+
+function saveGame() {
+  autoSave();
+  saveBtn.innerText = 'GUARDADO';
+  saveBtn.classList.add('saved');
+  saveBtn.disabled = true;
+}
+
+function autoSave() {
+  localStorage.setItem('apuntado', JSON.stringify(players));
+}
+
+function undo() {
   if (!history.length) return;
   players = JSON.parse(history.pop());
-  gameOver = false;
-  players.forEach(p => delete p.winner);
   render();
+  autoSave();
 }
 
-function resetGame() {
-  if (confirm("¿Reiniciar partida?")) {
-    players = [];
-    history = [];
-    playersDiv.innerHTML = "";
+function confirmReset() {
+  localStorage.removeItem('apuntado');
+  location.reload();
+}
+
+function showRules() {
+  alert('Gana quien llegue a -51 o quede como único jugador activo.');
+}
+
+window.onload = () => {
+  const saved = localStorage.getItem('apuntado');
+  if (saved) {
+    players = JSON.parse(saved);
+    render();
+    saveBtn.innerText = 'GUARDADO';
+    saveBtn.classList.add('saved');
+    saveBtn.disabled = true;
   }
-}
-
-modal.onclick = e => {
-  if (e.target === modal) modal.style.display = "none";
 };
 </script>
 
