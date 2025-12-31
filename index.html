@@ -2,11 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>APUNTADO V.01 - ESTABLE 1</title>
+<title>APUNTADO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 *{box-sizing:border-box;font-family:Arial,sans-serif}
-body{margin:0;background:#000;color:#fff;min-height:100vh;overflow-x:hidden}
+body{margin:0;background:#000;color:#fff;min-height:100vh}
 
 h1{text-align:center;letter-spacing:4px;margin:15px 0}
 
@@ -27,17 +28,18 @@ select,button{
 }
 
 button{cursor:pointer}
-button:disabled{opacity:.4}
+button:disabled{opacity:.4;cursor:default}
 
 .btn-undo{border-color:#b36b00;color:#ffb84d}
 .btn-reset{border-color:#6b2f2f;color:#e5a0a0}
 
+/* 👇 margen lateral mínimo para evitar recortes */
 .players{
   display:grid;
   grid-template-columns:repeat(2,1fr);
   grid-template-rows:repeat(3,1fr);
   height:calc(100vh - 200px);
-  padding:0 2px;
+  padding:0 2px; /* ← margen de seguridad */
 }
 
 .player{
@@ -51,6 +53,7 @@ button:disabled{opacity:.4}
 .player.disabled{opacity:.35;pointer-events:none}
 .player.winner{border:2px solid #d4af37}
 
+/* 👇 bloque nombre + entradas centrado */
 .name-block{
   display:flex;
   flex-direction:column;
@@ -104,6 +107,7 @@ button:disabled{opacity:.4}
   padding:10px;
 }
 
+/* MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -216,8 +220,7 @@ function render(){
     };
 
     d.querySelector(".score-zone").onclick=()=>{
-      if(state.winner!==null||p.disabled)return;
-      openScore(i);
+      openScore(i)
     };
 
     playersDiv.appendChild(d);
@@ -226,9 +229,9 @@ function render(){
 
 function openScore(i){
   modalText.textContent="Puntos";
-  modalInput.style.display="block";
   modalInput.value="";
   modal.style.display="flex";
+  modalInput.style.display="block";
   modalInput.focus();
   modalActions.innerHTML=`
     <button onclick="apply(${i},1)">SUMAR</button>
@@ -285,7 +288,10 @@ function setEntry(i){
   p.disabled=false;
   p.entradas=(p.entradas||0)+1;
   modal.style.display="none";
-  save();render();
+  save();
+  render();
+  // Corregido: ahora al reingresar con NO se deshabilita y aplica estilo correctamente
+  checkState();
 }
 
 function reject(i){
@@ -295,26 +301,26 @@ function reject(i){
   p.out=true;
   modal.style.display="none";
   checkState();
-  save();render();
+  save();
+  render();
 }
 
 countSel.onchange=()=>{
   state.count=parseInt(countSel.value);
   state.players=[];
-  state.winner=null;
   for(let i=0;i<state.count;i++){
-    state.players.push({
-      name:`NOMBRE ${i+1}`,
-      score:0,entradas:0,disabled:false,out:false
-    });
+    state.players.push({name:`NOMBRE ${i+1}`,score:0,entradas:0,disabled:false,out:false});
   }
-  save();render();
+  save();
+  render();
 };
 
 undoBtn.onclick=()=>{
   if(!state.history.length)return;
   state=JSON.parse(state.history.pop());
-  save();render();
+  save();
+  render();
+  if(state.history.length===0)undoBtn.disabled=true;
 };
 
 function resetGame(){
