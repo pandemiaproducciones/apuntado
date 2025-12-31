@@ -1,235 +1,239 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marcador</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APUNTADO</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #111;
-    color: #fff;
+:root{
+  --bg:#000;
+  --fg:#fff;
+  --line:#333;
+  --green:#1f7a3f;
+  --red:#7a1f1f;
+  --gold:#d4af37;
+  --orange:#b87333;
 }
 
-header {
-    padding: 12px;
-    background: #000;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+*{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont;}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--fg);
 }
 
-select {
-    font-size: 16px;
-    padding: 4px;
+header{
+  padding:10px;
+  display:flex;
+  gap:10px;
+  align-items:center;
 }
 
-button {
-    padding: 6px 12px;
-    font-size: 14px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
+select,button,input{
+  background:#000;
+  color:#fff;
+  border:1px solid var(--line);
+  padding:6px 10px;
+  font-size:16px;
 }
 
-#undoBtn {
-    background: orange;
-    color: #000;
+button{
+  cursor:pointer;
 }
 
-#players {
-    padding: 10px;
+#players{
+  display:grid;
+  gap:10px;
+  padding:10px;
 }
 
-.player {
-    background: #222;
-    margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 8px;
+.player{
+  border:1px solid var(--line);
+  padding:8px;
 }
 
-.player input[type="text"] {
-    width: 100%;
-    font-size: 16px;
-    margin-bottom: 6px;
+.player.inactive{
+  opacity:.3;
+  pointer-events:none;
 }
 
-.score {
-    font-size: 24px;
-    text-align: center;
-    margin-bottom: 6px;
+.player.winner{
+  border-color:var(--gold);
 }
 
-.controls {
-    display: flex;
-    gap: 6px;
+.name{
+  font-weight:600;
 }
 
-.controls input {
-    flex: 1;
-    font-size: 16px;
-    padding: 4px;
+.name.winner{
+  font-weight:800;
 }
 
-.controls button {
-    flex: 1;
+.sep{
+  border-top:1px solid var(--line);
+  margin:6px 0;
 }
 
-footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background: #000;
-    padding: 10px;
+.score{
+  font-size:28px;
 }
 
-#resetBtn {
-    width: 100%;
-    background: red;
-    color: white;
-    font-size: 16px;
+.controls{
+  display:flex;
+  gap:6px;
+  margin-top:6px;
 }
+
+.controls button{
+  flex:1;
+}
+
+footer{
+  display:flex;
+  gap:10px;
+  padding:10px;
+}
+
+#undo{border-color:var(--orange);color:var(--orange);}
+#reset{border-color:var(--red);color:var(--red);}
 </style>
 </head>
 
 <body>
 
 <header>
-    <div>
-        Jugadores:
-        <select id="playerCount">
-            <option value="">—</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-        </select>
-    </div>
-    <button id="undoBtn">DESHACER</button>
+  <strong>APUNTADO</strong>
+  <select id="playerCount">
+    <option value="">Jugadores</option>
+    <option>2</option><option>3</option><option>4</option>
+    <option>5</option><option>6</option>
+  </select>
 </header>
 
 <div id="players"></div>
 
 <footer>
-    <button id="resetBtn">REINICIAR</button>
+  <button id="undo">DESHACER</button>
+  <button id="reset">REINICIAR</button>
 </footer>
 
 <script>
-let state = JSON.parse(localStorage.getItem("marcador")) || null;
+let state = JSON.parse(localStorage.getItem("apuntado")) || null;
 let history = [];
 
-const playerCountSelect = document.getElementById("playerCount");
 const playersDiv = document.getElementById("players");
-const undoBtn = document.getElementById("undoBtn");
-const resetBtn = document.getElementById("resetBtn");
+const countSelect = document.getElementById("playerCount");
 
-function save() {
-    localStorage.setItem("marcador", JSON.stringify(state));
-}
+function save(){ localStorage.setItem("apuntado", JSON.stringify(state)); }
 
-function pushHistory() {
-    history.push(JSON.stringify(state));
-    if (history.length > 50) history.shift();
-}
+function render(){
+  playersDiv.innerHTML="";
+  if(!state) return;
 
-function render() {
-    playersDiv.innerHTML = "";
-    if (!state) return;
+  state.players.forEach((p,i)=>{
+    const d=document.createElement("div");
+    d.className="player"+(p.inactive?" inactive":"")+(p.winner?" winner":"");
 
-    state.players.forEach((p, i) => {
-        const div = document.createElement("div");
-        div.className = "player";
+    const name=document.createElement("div");
+    name.contentEditable=!p.inactive;
+    name.className="name"+(p.winner?" winner":"");
+    name.textContent=p.name;
+    name.oninput=()=>{p.name=name.textContent;save();};
 
-        const name = document.createElement("input");
-        name.type = "text";
-        name.value = p.name;
-        name.oninput = () => {
-            pushHistory();
-            p.name = name.value;
-            save();
-        };
+    const sep=document.createElement("div");
+    sep.className="sep";
 
-        const score = document.createElement("div");
-        score.className = "score";
-        score.textContent = p.score;
+    const score=document.createElement("div");
+    score.className="score";
+    score.textContent=p.score;
+    score.onclick=()=>{
+      if(p.inactive) return;
+      const val=prompt("¿Cuántos puntos?");
+      if(val===null) return;
+      history.push(JSON.stringify(state));
+      p.score+=Number(val);
+      checkWinner();
+      save();
+      render();
+    };
 
-        const controls = document.createElement("div");
-        controls.className = "controls";
+    const controls=document.createElement("div");
+    controls.className="controls";
 
-        const value = document.createElement("input");
-        value.type = "number";
-        value.inputMode = "numeric";
-        value.placeholder = "Puntos";
-
-        const add = document.createElement("button");
-        add.textContent = "+";
-        add.onclick = () => {
-            if (value.value === "") return;
-            pushHistory();
-            p.score += Number(value.value);
-            value.value = "";
-            save();
-            render();
-        };
-
-        const sub = document.createElement("button");
-        sub.textContent = "−";
-        sub.onclick = () => {
-            if (value.value === "") return;
-            pushHistory();
-            p.score -= Number(value.value);
-            value.value = "";
-            save();
-            render();
-        };
-
-        controls.append(value, add, sub);
-        div.append(name, score, controls);
-        playersDiv.appendChild(div);
+    ["+","-"].forEach(sym=>{
+      const b=document.createElement("button");
+      b.textContent=sym;
+      b.onclick=()=>{
+        const v=prompt("Cantidad:");
+        if(v===null) return;
+        history.push(JSON.stringify(state));
+        p.score+= sym==="+"?Number(v):-Number(v);
+        checkWinner();
+        save();
+        render();
+      };
+      controls.appendChild(b);
     });
-}
 
-playerCountSelect.onchange = () => {
-    const n = Number(playerCountSelect.value);
-    if (!n) return;
-
-    const players = [];
-    for (let i = 0; i < n; i++) {
-        let entry = prompt(`Jugador ${i + 1}: ¿Con cuántos puntos entra?`, "0");
-        players.push({
-            name: `Jugador ${i + 1}`,
-            score: Number(entry) || 0
-        });
+    if(p.winner){
+      const w=document.createElement("div");
+      w.textContent="GANADOR";
+      w.style.color="var(--gold)";
+      controls.appendChild(w);
     }
 
-    state = { players };
-    history = [];
-    save();
-    render();
+    d.append(name,sep,score,controls);
+    playersDiv.appendChild(d);
+  });
+}
+
+function checkWinner(){
+  state.players.forEach(p=>p.winner=false);
+
+  const active=state.players.filter(p=>!p.inactive);
+  active.forEach(p=>{
+    if(p.score<=-51){
+      p.winner=true;
+      active.forEach(o=>{if(o!==p)o.inactive=true;});
+    }
+  });
+
+  const alive=active.filter(p=>p.score<=100);
+  if(alive.length===1){
+    alive[0].winner=true;
+    active.forEach(o=>{if(o!==alive[0])o.inactive=true;});
+  }
+}
+
+countSelect.onchange=()=>{
+  const n=Number(countSelect.value);
+  if(!n) return;
+  state={players:[]};
+  for(let i=1;i<=n;i++) state.players.push({name:"Jugador "+i,score:0,inactive:false,winner:false});
+  save();
+  render();
 };
 
-undoBtn.onclick = () => {
-    if (!history.length) return;
-    state = JSON.parse(history.pop());
-    save();
-    render();
+document.getElementById("undo").onclick=()=>{
+  if(!history.length) return;
+  state=JSON.parse(history.pop());
+  save();render();
 };
 
-resetBtn.onclick = () => {
-    if (!confirm("¿Seguro que deseas reiniciar todo?")) return;
-    localStorage.removeItem("marcador");
-    state = null;
-    history = [];
-    playerCountSelect.value = "";
-    playersDiv.innerHTML = "";
+document.getElementById("reset").onclick=()=>{
+  if(!confirm("¿Reiniciar juego?")) return;
+  localStorage.removeItem("apuntado");
+  state=null;
+  history=[];
+  playersDiv.innerHTML="";
+  countSelect.value="";
 };
 
-if (state) {
-    playerCountSelect.value = state.players.length;
-    render();
+if(state){
+  countSelect.value=state.players.length;
+  render();
 }
 </script>
 
