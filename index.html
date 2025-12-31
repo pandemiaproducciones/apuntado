@@ -2,288 +2,234 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>APUNTADO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marcador</title>
 
 <style>
-* { box-sizing: border-box; font-family: Arial, sans-serif; }
-
-body { margin: 0; background: #000; color: #fff; }
-
-header { text-align: center; padding: 15px 10px 5px; }
-h1 { margin: 5px 0 10px; letter-spacing: 4px; }
-
-.controls {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #fff;
 }
 
-select, button {
-  background: #000;
-  color: #fff;
-  border: 1px solid #333;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 16px;
+header {
+    padding: 12px;
+    background: #000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-button:disabled { opacity: .4; }
-
-.btn-save.active {
-  background: #2f6b3f;
-  color: #fff;
-  border-color: #2f6b3f;
+select {
+    font-size: 16px;
+    padding: 4px;
 }
 
-.players {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  height: calc(100vh - 170px);
+button {
+    padding: 6px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+#undoBtn {
+    background: orange;
+    color: #000;
+}
+
+#players {
+    padding: 10px;
 }
 
 .player {
-  border: 1px solid #222;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
+    background: #222;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 8px;
 }
 
-.player.disabled {
-  opacity: .35;
-  pointer-events: none;
+.player input[type="text"] {
+    width: 100%;
+    font-size: 16px;
+    margin-bottom: 6px;
 }
 
-.player.winner { border: 2px solid #d4af37; }
-
-.name-zone input {
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: #fff;
-  text-align: center;
-  font-size: 18px;
+.score {
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 6px;
 }
 
-.entradas {
-  margin-top: 4px;
-  background: #ffeb3b;
-  color: #000;
-  font-size: 13px;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 6px;
-  width: fit-content;
-  margin-inline: auto;
+.controls {
+    display: flex;
+    gap: 6px;
 }
 
-.divider { height: 1px; background: #333; margin: 8px 0; }
-
-.score-zone {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.controls input {
+    flex: 1;
+    font-size: 16px;
+    padding: 4px;
 }
 
-.score { font-size: 48px; font-weight: bold; }
-.score.out { color: #e55353; }
-
-.winner-label {
-  color: #d4af37;
-  margin-top: 6px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  text-align: center;
+.controls button {
+    flex: 1;
 }
 
-.bottom {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  padding: 10px;
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #000;
+    padding: 10px;
 }
 
-.btn-danger { border-color: #6b2f2f; color: #e5a0a0; }
-
-.modal, .overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.85);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
+#resetBtn {
+    width: 100%;
+    background: red;
+    color: white;
+    font-size: 16px;
 }
-
-.modal-content, .overlay-box {
-  background: #111;
-  padding: 20px;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 320px;
-  text-align: center;
-}
-
-.modal-content input {
-  width: 100%;
-  padding: 12px;
-  font-size: 22px;
-  text-align: center;
-  background: #000;
-  color: #fff;
-  border: 1px solid #333;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.modal-buttons button { flex: 1; }
 </style>
 </head>
 
 <body>
 
 <header>
-  <h1>APUNTADO</h1>
-  <div class="controls">
-    <select id="count">
-      <option value="">Jugadores</option>
-      <option>2</option><option>3</option><option>4</option>
-      <option>5</option><option>6</option>
-    </select>
-    <button id="saveBtn" class="btn-save" disabled>GUARDAR</button>
-  </div>
+    <div>
+        Jugadores:
+        <select id="playerCount">
+            <option value="">—</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+        </select>
+    </div>
+    <button id="undoBtn">DESHACER</button>
 </header>
 
-<div class="players" id="players"></div>
+<div id="players"></div>
 
-<div class="bottom">
-  <button class="btn-danger" onclick="undo()">DESHACER</button>
-  <button class="btn-danger" onclick="reset()">REINICIAR</button>
-</div>
-
-<!-- SUMAR / RESTAR -->
-<div class="modal" id="scoreModal">
-  <div class="modal-content">
-    <input id="scoreInput" type="number" inputmode="numeric">
-    <div class="modal-buttons">
-      <button onclick="applyScore(1)">SUMAR</button>
-      <button onclick="applyScore(-1)">RESTAR</button>
-    </div>
-  </div>
-</div>
-
-<!-- REINGRESO SI / NO -->
-<div class="overlay" id="reModal">
-  <div class="overlay-box">
-    <div id="reText"></div>
-    <button onclick="reDecision(true)">SI</button>
-    <button onclick="reDecision(false)">NO</button>
-  </div>
-</div>
-
-<!-- PUNTOS DE ENTRADA -->
-<div class="modal" id="entryModal">
-  <div class="modal-content">
-    <div>¿Con cuántos puntos entra?</div>
-    <input id="entryInput" type="number" inputmode="numeric">
-    <div class="modal-buttons">
-      <button onclick="confirmEntry()">CONFIRMAR</button>
-    </div>
-  </div>
-</div>
+<footer>
+    <button id="resetBtn">REINICIAR</button>
+</footer>
 
 <script>
-let history=[], currentScore=null, rePlayer=null;
+let state = JSON.parse(localStorage.getItem("marcador")) || null;
+let history = [];
 
-const playersEl=document.getElementById("players");
-const scoreModal=document.getElementById("scoreModal");
-const reModal=document.getElementById("reModal");
-const entryModal=document.getElementById("entryModal");
+const playerCountSelect = document.getElementById("playerCount");
+const playersDiv = document.getElementById("players");
+const undoBtn = document.getElementById("undoBtn");
+const resetBtn = document.getElementById("resetBtn");
 
-function build(){
-  playersEl.innerHTML="";
-  const n=document.getElementById("count").value;
-  if(!n) return;
-  for(let i=0;i<n;i++){
-    playersEl.innerHTML+=`
-    <div class="player" data-i="${i}" data-entries="0" data-reentered="false">
-      <div class="name-zone"><input value="Nombre ${i+1}"></div>
-      <div class="divider"></div>
-      <div class="score-zone"><div class="score">0</div></div>
-    </div>`;
-  }
+function save() {
+    localStorage.setItem("marcador", JSON.stringify(state));
 }
 
-document.getElementById("count").onchange=build;
+function pushHistory() {
+    history.push(JSON.stringify(state));
+    if (history.length > 50) history.shift();
+}
 
-playersEl.onclick=e=>{
-  const zone=e.target.closest(".score-zone");
-  if(!zone) return;
-  currentScore=zone.querySelector(".score");
-  scoreModal.style.display="flex";
-  const inp=document.getElementById("scoreInput");
-  inp.value="";
-  setTimeout(()=>inp.focus(),100);
+function render() {
+    playersDiv.innerHTML = "";
+    if (!state) return;
+
+    state.players.forEach((p, i) => {
+        const div = document.createElement("div");
+        div.className = "player";
+
+        const name = document.createElement("input");
+        name.type = "text";
+        name.value = p.name;
+        name.oninput = () => {
+            pushHistory();
+            p.name = name.value;
+            save();
+        };
+
+        const score = document.createElement("div");
+        score.className = "score";
+        score.textContent = p.score;
+
+        const controls = document.createElement("div");
+        controls.className = "controls";
+
+        const value = document.createElement("input");
+        value.type = "number";
+        value.inputMode = "numeric";
+        value.placeholder = "Puntos";
+
+        const add = document.createElement("button");
+        add.textContent = "+";
+        add.onclick = () => {
+            if (value.value === "") return;
+            pushHistory();
+            p.score += Number(value.value);
+            value.value = "";
+            save();
+            render();
+        };
+
+        const sub = document.createElement("button");
+        sub.textContent = "−";
+        sub.onclick = () => {
+            if (value.value === "") return;
+            pushHistory();
+            p.score -= Number(value.value);
+            value.value = "";
+            save();
+            render();
+        };
+
+        controls.append(value, add, sub);
+        div.append(name, score, controls);
+        playersDiv.appendChild(div);
+    });
+}
+
+playerCountSelect.onchange = () => {
+    const n = Number(playerCountSelect.value);
+    if (!n) return;
+
+    const players = [];
+    for (let i = 0; i < n; i++) {
+        let entry = prompt(`Jugador ${i + 1}: ¿Con cuántos puntos entra?`, "0");
+        players.push({
+            name: `Jugador ${i + 1}`,
+            score: Number(entry) || 0
+        });
+    }
+
+    state = { players };
+    history = [];
+    save();
+    render();
 };
 
-function applyScore(m){
-  history.push(playersEl.innerHTML);
-  currentScore.textContent=parseInt(currentScore.textContent)+(parseInt(scoreInput.value)||0)*m;
-  scoreModal.style.display="none";
-  check();
-}
+undoBtn.onclick = () => {
+    if (!history.length) return;
+    state = JSON.parse(history.pop());
+    save();
+    render();
+};
 
-function check(){
-  document.querySelectorAll(".player").forEach(p=>{
-    const s=p.querySelector(".score");
-    if(parseInt(s.textContent)>=101 && p.dataset.reentered==="false"){
-      rePlayer=p;
-      document.getElementById("reText").textContent=
-        p.querySelector("input").value+" ¿desea reingresar?";
-      reModal.style.display="flex";
-    }
-  });
-}
+resetBtn.onclick = () => {
+    if (!confirm("¿Seguro que deseas reiniciar todo?")) return;
+    localStorage.removeItem("marcador");
+    state = null;
+    history = [];
+    playerCountSelect.value = "";
+    playersDiv.innerHTML = "";
+};
 
-function reDecision(ok){
-  reModal.style.display="none";
-  if(!ok){
-    rePlayer.classList.add("disabled");
-    rePlayer.querySelector(".score").classList.add("out");
-  } else {
-    entryModal.style.display="flex";
-    const inp=document.getElementById("entryInput");
-    inp.value="";
-    setTimeout(()=>inp.focus(),100);
-  }
-}
-
-function confirmEntry(){
-  const v=parseInt(entryInput.value);
-  if(isNaN(v)) return;
-  rePlayer.querySelector(".score").textContent=v;
-  rePlayer.dataset.reentered="true";
-  rePlayer.dataset.entries=parseInt(rePlayer.dataset.entries)+1;
-  const label=document.createElement("div");
-  label.className="entradas";
-  label.textContent="ENTRADAS: "+rePlayer.dataset.entries;
-  rePlayer.querySelector(".name-zone").appendChild(label);
-  entryModal.style.display="none";
-}
-
-function undo(){
-  if(!history.length) return;
-  playersEl.innerHTML=history.pop();
-}
-
-function reset(){
-  if(confirm("¿Reiniciar juego?")) location.reload();
+if (state) {
+    playerCountSelect.value = state.players.length;
+    render();
 }
 </script>
 
