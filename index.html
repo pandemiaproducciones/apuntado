@@ -33,13 +33,13 @@ button:disabled{opacity:.4;cursor:default}
 .btn-undo{border-color:#b36b00;color:#ffb84d}
 .btn-reset{border-color:#6b2f2f;color:#e5a0a0}
 
-/* 👇 margen lateral mínimo para evitar recortes */
+/* margen lateral mínimo */
 .players{
   display:grid;
   grid-template-columns:repeat(2,1fr);
   grid-template-rows:repeat(3,1fr);
   height:calc(100vh - 200px);
-  padding:0 2px; /* ← margen de seguridad */
+  padding:0 2px;
 }
 
 .player{
@@ -53,7 +53,6 @@ button:disabled{opacity:.4;cursor:default}
 .player.disabled{opacity:.35;pointer-events:none}
 .player.winner{border:2px solid #d4af37}
 
-/* 👇 bloque nombre + entradas centrado */
 .name-block{
   display:flex;
   flex-direction:column;
@@ -215,6 +214,7 @@ function render(){
       </div>
     `;
 
+    d.querySelector(".name").onfocus=e=>e.target.select();
     d.querySelector(".name").oninput=e=>{
       p.name=e.target.value.toUpperCase();save()
     };
@@ -229,6 +229,7 @@ function render(){
 
 function openScore(i){
   modalText.textContent="Puntos";
+  modalInput.style.display="block";   // ✅ FIX CLAVE
   modalInput.value="";
   modal.style.display="flex";
   modalInput.focus();
