@@ -6,386 +6,307 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-* {
-  box-sizing: border-box;
-  font-family: Arial, sans-serif;
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{margin:0;background:#000;color:#fff;min-height:100vh}
+
+h1{text-align:center;letter-spacing:4px;margin:15px 0}
+
+.top-controls{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-bottom:10px;
 }
 
-body {
-  margin: 0;
-  background: #000;
-  color: #fff;
-  min-height: 100vh;
+select,button{
+  background:#000;
+  color:#fff;
+  border:1px solid #333;
+  border-radius:6px;
+  padding:8px 12px;
+  font-size:16px;
 }
 
-header {
-  text-align: center;
-  padding: 12px;
+button{cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+
+.btn-undo{border-color:#b36b00;color:#ffb84d}
+.btn-reset{border-color:#6b2f2f;color:#e5a0a0}
+
+.players{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  grid-template-rows:repeat(3,1fr);
+  height:calc(100vh - 200px);
 }
 
-h1 {
-  margin: 0 0 10px 0;
-  letter-spacing: 4px;
+.player{
+  border:1px solid #222;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  transition:.3s;
 }
 
-.controls {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
+.player.disabled{opacity:.35;pointer-events:none}
+.player.winner{border:2px solid #d4af37}
+
+.name{
+  text-align:center;
+  font-size:18px;
+  font-weight:bold;
+  background:transparent;
+  border:none;
+  color:#fff;
+  outline:none;
 }
 
-select, button {
-  padding: 8px 12px;
-  font-size: 16px;
-  background: #000;
-  color: #fff;
-  border: 1px solid #444;
-  border-radius: 6px;
+.divider{height:1px;background:#333;margin:8px 0}
+
+.score-zone{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  cursor:pointer;
 }
 
-button {
-  cursor: pointer;
+.score{font-size:48px;font-weight:bold}
+.score.out{color:#e55353}
+
+.entradas{
+  margin-top:4px;
+  background:#ffeb3b;
+  color:#000;
+  font-size:14px;
+  padding:2px 6px;
+  border-radius:6px;
 }
 
-button:disabled {
-  opacity: 0.4;
+.winner-label{
+  margin-top:6px;
+  color:#d4af37;
+  font-weight:bold;
+  letter-spacing:2px;
 }
 
-.btn-undo {
-  border-color: orange;
-  color: orange;
+.bottom{
+  display:flex;
+  justify-content:center;
+  padding:10px;
 }
 
-.btn-reset {
-  border-color: #6b2f2f;
-  color: #e5a0a0;
+/* MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
 }
 
-.players {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  height: calc(100vh - 180px);
+.modal-box{
+  background:#111;
+  padding:20px;
+  border-radius:10px;
+  text-align:center;
+  width:280px;
 }
 
-.player {
-  border: 1px solid #222;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
+.modal-box input{
+  width:100%;
+  padding:12px;
+  font-size:22px;
+  text-align:center;
+  background:#000;
+  color:#fff;
+  border:1px solid #333;
+  margin-bottom:12px;
 }
 
-.player.disabled {
-  opacity: 0.4;
-  pointer-events: none;
+.modal-actions{
+  display:flex;
+  gap:10px;
 }
 
-.player.winner {
-  border: 2px solid #d4af37;
-}
-
-.name-zone {
-  text-align: center;
-}
-
-.name-zone input {
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-size: 18px;
-  text-align: center;
-  outline: none;
-  text-transform: uppercase;
-}
-
-.entradas-label {
-  margin-top: 4px;
-  font-size: 13px;
-  font-weight: bold;
-  background: #ffeb3b;
-  color: #000;
-  padding: 2px 6px;
-  border-radius: 6px;
-  display: inline-block;
-}
-
-.divider {
-  height: 1px;
-  background: #333;
-  margin: 8px 0;
-}
-
-.score-zone {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.score {
-  font-size: 48px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.score.out {
-  color: #e55353;
-}
-
-.winner-label {
-  margin-top: 6px;
-  font-size: 16px;
-  letter-spacing: 2px;
-  color: #d4af37;
-  font-weight: bold;
-}
-
-.bottom-controls {
-  padding: 10px;
-  text-align: center;
-}
-
-/* MODALES */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-.modal-content {
-  background: #111;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-  width: 85%;
-  max-width: 320px;
-}
-
-.modal-content input {
-  width: 100%;
-  padding: 12px;
-  font-size: 22px;
-  text-align: center;
-  background: #000;
-  color: #fff;
-  border: 1px solid #333;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.modal-buttons button {
-  flex: 1;
-}
+.modal-actions button{flex:1}
+.btn-yes{border-color:#2f6b3f;color:#9be5b1}
+.btn-no{border-color:#6b2f2f;color:#e5a0a0}
 </style>
 </head>
 
 <body>
 
-<header>
-  <h1>APUNTADO</h1>
-  <div class="controls">
-    <select id="playerCount">
-      <option value="2">2 JUGADORES</option>
-      <option value="3">3 JUGADORES</option>
-      <option value="4">4 JUGADORES</option>
-      <option value="5">5 JUGADORES</option>
-      <option value="6">6 JUGADORES</option>
-    </select>
-    <button class="btn-undo" onclick="undoLast()">DESHACER</button>
-  </div>
-</header>
+<h1>APUNTADO</h1>
+
+<div class="top-controls">
+  <select id="count">
+    <option value="">Jugadores</option>
+    <option value="2">2</option><option value="3">3</option>
+    <option value="4">4</option><option value="5">5</option>
+    <option value="6">6</option>
+  </select>
+  <button class="btn-undo" id="undo" disabled>DESHACER</button>
+</div>
 
 <div class="players" id="players"></div>
 
-<div class="bottom-controls">
+<div class="bottom">
   <button class="btn-reset" onclick="resetGame()">REINICIAR</button>
 </div>
 
-<!-- SUMAR / RESTAR -->
-<div class="modal" id="pointsModal">
-  <div class="modal-content">
-    <input id="pointsInput" type="number" inputmode="numeric" placeholder="PUNTOS">
-    <div class="modal-buttons">
-      <button onclick="applyPoints(1)">SUMAR</button>
-      <button onclick="applyPoints(-1)">RESTAR</button>
-    </div>
-  </div>
-</div>
-
-<!-- REINGRESO -->
-<div class="modal" id="reingresoModal">
-  <div class="modal-content">
-    <div id="reingresoText"></div>
-    <div class="modal-buttons">
-      <button onclick="confirmReingreso(true)">SI</button>
-      <button onclick="confirmReingreso(false)">NO</button>
-    </div>
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div id="modalText"></div>
+    <input id="modalInput" type="number" inputmode="numeric">
+    <div class="modal-actions" id="modalActions"></div>
   </div>
 </div>
 
 <script>
-const playersDiv = document.getElementById("players");
-const selector = document.getElementById("playerCount");
-const pointsModal = document.getElementById("pointsModal");
-const pointsInput = document.getElementById("pointsInput");
-const reingresoModal = document.getElementById("reingresoModal");
-const reingresoText = document.getElementById("reingresoText");
+let state=JSON.parse(localStorage.getItem("apuntado"))||{
+  count:0,players:[],history:[],winner:null
+};
 
-let currentScoreEl = null;
-let history = [];
-let reingresoIndex = null;
+const playersDiv=document.getElementById("players");
+const countSel=document.getElementById("count");
+const undoBtn=document.getElementById("undo");
+const modal=document.getElementById("modal");
+const modalText=document.getElementById("modalText");
+const modalInput=document.getElementById("modalInput");
+const modalActions=document.getElementById("modalActions");
 
-/* ---------- GUARDADO ---------- */
-function saveGame() {
-  const data = {
-    count: selector.value,
-    players: []
-  };
-  document.querySelectorAll(".player").forEach(p => {
-    data.players.push({
-      name: p.querySelector("input").value,
-      score: parseInt(p.querySelector(".score").textContent),
-      disabled: p.classList.contains("disabled"),
-      entradas: p.dataset.entradas || 0
-    });
-  });
-  localStorage.setItem("apuntadoGame", JSON.stringify(data));
-}
+function save(){localStorage.setItem("apuntado",JSON.stringify(state))}
+function snapshot(){state.history.push(JSON.stringify(state));undoBtn.disabled=false}
 
-function loadGame() {
-  return JSON.parse(localStorage.getItem("apuntadoGame"));
-}
+function render(){
+  playersDiv.innerHTML="";
+  if(!state.count)return;
 
-/* ---------- RENDER ---------- */
-function render() {
-  playersDiv.innerHTML = "";
-  const saved = loadGame();
-  const count = saved ? saved.count : selector.value;
-  selector.value = count;
+  state.players.forEach((p,i)=>{
+    const d=document.createElement("div");
+    d.className="player";
+    if(state.winner!==null){
+      if(i===state.winner)d.classList.add("winner");
+      else d.classList.add("disabled");
+    }else if(p.disabled)d.classList.add("disabled");
 
-  for (let i = 0; i < count; i++) {
-    const p = saved?.players[i];
-    const div = document.createElement("div");
-    div.className = "player" + (p?.disabled ? " disabled" : "");
-    div.dataset.entradas = p?.entradas || 0;
-
-    div.innerHTML = `
-      <div class="name-zone">
-        <input value="${p?.name || "NOMBRE"}">
-        ${p?.entradas ? `<div class="entradas-label">ENTRADAS: ${p.entradas}</div>` : ""}
-      </div>
+    d.innerHTML=`
+      <input class="name" value="${p.name}">
+      ${p.entradas?`<div class="entradas">ENTRADAS: ${p.entradas}</div>`:""}
       <div class="divider"></div>
       <div class="score-zone">
-        <div class="score ${p?.disabled ? "out" : ""}">${p?.score || 0}</div>
+        <div class="score ${p.out?"out":""}">${p.score}</div>
+        ${state.winner===i?'<div class="winner-label">GANADOR</div>':""}
       </div>
     `;
 
-    const score = div.querySelector(".score");
-    if (!p?.disabled) {
-      score.onclick = () => {
-        currentScoreEl = score;
-        pointsInput.value = "";
-        pointsModal.style.display = "flex";
-        pointsInput.focus();
-      };
-    }
+    d.querySelector(".name").oninput=e=>{
+      p.name=e.target.value.toUpperCase();save()
+    };
 
-    playersDiv.appendChild(div);
-  }
-}
+    d.querySelector(".score-zone").onclick=()=>{
+      openScore(i)
+    };
 
-/* ---------- PUNTOS ---------- */
-function applyPoints(mult) {
-  const val = parseInt(pointsInput.value);
-  if (isNaN(val)) return;
-  history.push(localStorage.getItem("apuntadoGame"));
-  currentScoreEl.textContent =
-    parseInt(currentScoreEl.textContent) + val * mult;
-  pointsModal.style.display = "none";
-  checkOut();
-  saveGame();
-}
-
-function checkOut() {
-  const players = document.querySelectorAll(".player");
-  players.forEach((p, i) => {
-    const score = parseInt(p.querySelector(".score").textContent);
-    if (score >= 101 && !p.classList.contains("disabled")) {
-      reingresoIndex = i;
-      reingresoText.textContent =
-        `¿EL JUGADOR "${p.querySelector("input").value}" DESEA INGRESAR NUEVAMENTE?`;
-      reingresoModal.style.display = "flex";
-    }
+    playersDiv.appendChild(d);
   });
 }
 
-/* ---------- REINGRESO ---------- */
-function confirmReingreso(ok) {
-  const p = document.querySelectorAll(".player")[reingresoIndex];
-  const scoreEl = p.querySelector(".score");
+function openScore(i){
+  modalText.textContent="Puntos";
+  modalInput.value="";
+  modal.style.display="flex";
+  modalInput.focus();
+  modalActions.innerHTML=`
+    <button onclick="apply(${i},1)">SUMAR</button>
+    <button onclick="apply(${i},-1)">RESTAR</button>
+  `;
+}
 
-  if (!ok) {
-    p.classList.add("disabled");
-    scoreEl.classList.add("out");
-    reingresoModal.style.display = "none";
-    saveGame();
-    checkWinner();
-    return;
+function apply(i,m){
+  const v=parseInt(modalInput.value);
+  if(isNaN(v))return;
+  snapshot();
+  state.players[i].score+=v*m;
+  modal.style.display="none";
+  checkState();
+  save();render();
+}
+
+function checkState(){
+  state.players.forEach((p,i)=>{
+    if(p.score<=-51)state.winner=i;
+    if(p.score>=101&&!p.disabled)askReentry(i);
+  });
+  const active=state.players.filter(p=>!p.disabled).length;
+  if(active===1)state.winner=state.players.findIndex(p=>!p.disabled);
+}
+
+function askReentry(i){
+  modalText.textContent=`${state.players[i].name} ¿Desea ingresar nuevamente?`;
+  modalInput.style.display="none";
+  modalActions.innerHTML=`
+    <button class="btn-yes" onclick="reenter(${i})">SI</button>
+    <button class="btn-no" onclick="reject(${i})">NO</button>
+  `;
+  modal.style.display="flex";
+}
+
+function reenter(i){
+  modalText.textContent="¿Con cuántos puntos entra?";
+  modalInput.style.display="block";
+  modalInput.value="";
+  modalInput.focus();
+  modalActions.innerHTML=`
+    <button class="btn-yes" onclick="setEntry(${i})">ENTRAR</button>
+  `;
+}
+
+function setEntry(i){
+  const v=parseInt(modalInput.value);
+  if(isNaN(v))return;
+  snapshot();
+  const p=state.players[i];
+  p.score=v;p.out=false;p.disabled=false;
+  p.entradas=(p.entradas||0)+1;
+  modal.style.display="none";
+  save();render();
+}
+
+function reject(i){
+  snapshot();
+  state.players[i].disabled=true;
+  state.players[i].out=true;
+  modal.style.display="none";
+  checkState();save();render();
+}
+
+countSel.onchange=()=>{
+  state.count=parseInt(countSel.value);
+  state.players=[];
+  for(let i=0;i<state.count;i++){
+    state.players.push({name:`NOMBRE ${i+1}`,score:0,entradas:0,disabled:false,out:false});
   }
-
-  reingresoModal.style.display = "none";
-  currentScoreEl = scoreEl;
-  pointsInput.placeholder = "¿CON CUÁNTOS PUNTOS ENTRA?";
-  pointsModal.style.display = "flex";
-  pointsInput.focus();
-
-  p.dataset.entradas = parseInt(p.dataset.entradas) + 1 || 1;
-}
-
-/* ---------- GANADOR ---------- */
-function checkWinner() {
-  const active = [...document.querySelectorAll(".player")]
-    .filter(p => !p.classList.contains("disabled"));
-  if (active.length === 1) {
-    active[0].classList.add("winner");
-    active[0].querySelector(".score-zone")
-      .insertAdjacentHTML("beforeend", `<div class="winner-label">GANADOR</div>`);
-  }
-}
-
-/* ---------- CONTROLES ---------- */
-function undoLast() {
-  if (!history.length) return;
-  localStorage.setItem("apuntadoGame", history.pop());
-  render();
-}
-
-function resetGame() {
-  if (!confirm("¿REINICIAR JUEGO?")) return;
-  localStorage.removeItem("apuntadoGame");
-  history = [];
-  render();
-}
-
-selector.onchange = () => {
-  localStorage.removeItem("apuntadoGame");
-  render();
+  save();render();
 };
+
+undoBtn.onclick=()=>{
+  if(!state.history.length)return;
+  state=JSON.parse(state.history.pop());
+  save();render();
+};
+
+function resetGame(){
+  if(confirm("¿Reiniciar juego?")){
+    localStorage.removeItem("apuntado");
+    location.reload();
+  }
+}
 
 render();
 </script>
-
 </body>
 </html>
