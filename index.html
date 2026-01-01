@@ -3,19 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <title>APUNTADO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
 *{box-sizing:border-box;font-family:Arial,sans-serif}
-body{margin:0;background:#000;color:#fff;min-height:100vh}
+body{margin:0;background:#000;color:#fff;min-height:100vh;display:flex;flex-direction:column;}
 
-h1{text-align:center;letter-spacing:4px;margin:15px 0}
+h1{text-align:center;letter-spacing:4px;margin:15px 0;font-size:24px;}
 
 .top-controls{
   display:flex;
   justify-content:center;
   gap:12px;
   margin-bottom:10px;
+  padding:0 10px;
 }
 
 select,button{
@@ -33,27 +34,28 @@ button:disabled{opacity:.4;cursor:default}
 .btn-undo{border-color:#b36b00;color:#ffb84d}
 .btn-reset{border-color:#6b2f2f;color:#e5a0a0}
 
-/* 👇 margen lateral mínimo para evitar recortes */
 .players{
   display:grid;
-  grid-template-columns:repeat(2,1fr);
-  grid-template-rows:repeat(3,1fr);
-  height:calc(100vh - 200px);
-  padding:0 2px; /* ← margen de seguridad */
+  grid-template-columns:1fr 1fr; /* Siempre 2 columnas */
+  gap:8px;
+  padding:0 8px; /* Margen de seguridad lateral */
+  flex:1;
+  max-height:calc(100vh - 180px);
+  overflow:hidden;
 }
 
 .player{
   border:1px solid #222;
-  padding:10px;
+  padding:12px 8px;
   display:flex;
   flex-direction:column;
   transition:.3s;
+  border-radius:8px;
 }
 
 .player.disabled{opacity:.35;pointer-events:none}
 .player.winner{border:2px solid #d4af37}
 
-/* 👇 bloque nombre + entradas centrado */
 .name-block{
   display:flex;
   flex-direction:column;
@@ -69,6 +71,7 @@ button:disabled{opacity:.4;cursor:default}
   color:#fff;
   outline:none;
   text-transform:uppercase;
+  width:100%;
 }
 
 .entradas{
@@ -91,7 +94,11 @@ button:disabled{opacity:.4;cursor:default}
   cursor:pointer;
 }
 
-.score{font-size:48px;font-weight:bold}
+.score{
+  font-size:clamp(48px, 10vw, 72px); /* Entre 48px y 72px */
+  font-weight:bold;
+}
+
 .score.out{color:#e55353}
 
 .winner-label{
@@ -115,6 +122,7 @@ button:disabled{opacity:.4;cursor:default}
   display:none;
   align-items:center;
   justify-content:center;
+  z-index:100;
 }
 
 .modal-box{
@@ -122,7 +130,8 @@ button:disabled{opacity:.4;cursor:default}
   padding:20px;
   border-radius:10px;
   text-align:center;
-  width:280px;
+  width:90%;
+  max-width:300px;
 }
 
 .modal-box input{
@@ -142,8 +151,15 @@ button:disabled{opacity:.4;cursor:default}
 }
 
 .modal-actions button{flex:1}
-.btn-yes{border-color:#2f6b3f;color:#9be5b1}
-.btn-no{border-color:#6b2f2f;color:#e5a0a0}
+
+/* Mejoras móviles */
+@media (max-width: 480px) {
+  .players {gap:6px; padding:0 6px;}
+  .player {padding:10px 6px;}
+  h1 {font-size:20px; margin:10px 0;}
+  .top-controls {padding:0 6px;}
+  select, button {font-size:15px; padding:7px 10px;}
+}
 </style>
 </head>
 
@@ -170,7 +186,7 @@ button:disabled{opacity:.4;cursor:default}
 <div class="modal" id="modal">
   <div class="modal-box">
     <div id="modalText"></div>
-    <input id="modalInput" type="number" inputmode="numeric">
+    <input id="modalInput" type="number" inputmode="decimal">
     <div class="modal-actions" id="modalActions"></div>
   </div>
 </div>
@@ -232,7 +248,7 @@ function openScore(i){
   modalInput.value="";
   modal.style.display="flex";
   modalInput.style.display="block";
-  modalInput.focus();
+  setTimeout(()=>modalInput.focus(),100); // Mejor foco en móviles
   modalActions.innerHTML=`
     <button onclick="apply(${i},1)">SUMAR</button>
     <button onclick="apply(${i},-1)">RESTAR</button>
@@ -241,7 +257,7 @@ function openScore(i){
 
 function apply(i,m){
   const v=parseInt(modalInput.value);
-  if(isNaN(v))return;
+  if(isNaN(v)||modalInput.value==="")return;
   snapshot();
   state.players[i].score+=v*m;
   modal.style.display="none";
@@ -250,19 +266,26 @@ function apply(i,m){
 }
 
 function checkState(){
+  let newWinner=null;
   state.players.forEach((p,i)=>{
-    if(p.score<=-51)state.winner=i;
-    if(p.score>=101&&!p.disabled)askReentry(i);
+    if(p.score<=-51 && !p.disabled) newWinner=i;
+    if(p.score>=101 && !p.disabled) askReentry(i);
   });
+  if(newWinner!==null) state.winner=newWinner;
+
   const active=state.players.filter(p=>!p.disabled).length;
-  if(active===1)state.winner=state.players.findIndex(p=>!p.disabled);
+  if(active===1 && state.winner===null){
+    state.winner=state.players.findIndex(p=>!p.disabled);
+  }
+
+  if(state.winner!==null){save();render();}
 }
 
 function askReentry(i){
   modalText.textContent=`${state.players[i].name} ¿Desea ingresar nuevamente?`;
   modalInput.style.display="none";
   modalActions.innerHTML=`
-    <button class="btn-yes" onclick="reenter(${i})">SI</button>
+    <button class="btn-yes" onclick="reenter(${i})">SÍ</button>
     <button class="btn-no" onclick="reject(${i})">NO</button>
   `;
   modal.style.display="flex";
@@ -272,7 +295,7 @@ function reenter(i){
   modalText.textContent="¿Con cuántos puntos entra?";
   modalInput.style.display="block";
   modalInput.value="";
-  modalInput.focus();
+  setTimeout(()=>modalInput.focus(),100);
   modalActions.innerHTML=`
     <button class="btn-yes" onclick="setEntry(${i})">ENTRAR</button>
   `;
@@ -280,7 +303,7 @@ function reenter(i){
 
 function setEntry(i){
   const v=parseInt(modalInput.value);
-  if(isNaN(v))return;
+  if(isNaN(v)||modalInput.value==="")return;
   snapshot();
   const p=state.players[i];
   p.score=v;
@@ -288,9 +311,7 @@ function setEntry(i){
   p.disabled=false;
   p.entradas=(p.entradas||0)+1;
   modal.style.display="none";
-  save();
-  render();
-  // Corregido: ahora al reingresar con NO se deshabilita y aplica estilo correctamente
+  save();render();
   checkState();
 }
 
@@ -300,14 +321,15 @@ function reject(i){
   p.disabled=true;
   p.out=true;
   modal.style.display="none";
+  save();render();
   checkState();
-  save();
-  render();
 }
 
 countSel.onchange=()=>{
   state.count=parseInt(countSel.value);
   state.players=[];
+  state.history=[];
+  state.winner=null;
   for(let i=0;i<state.count;i++){
     state.players.push({name:`NOMBRE ${i+1}`,score:0,entradas:0,disabled:false,out:false});
   }
@@ -318,9 +340,9 @@ countSel.onchange=()=>{
 undoBtn.onclick=()=>{
   if(!state.history.length)return;
   state=JSON.parse(state.history.pop());
+  if(state.history.length===0)undoBtn.disabled=true;
   save();
   render();
-  if(state.history.length===0)undoBtn.disabled=true;
 };
 
 function resetGame(){
