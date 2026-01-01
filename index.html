@@ -50,7 +50,6 @@ button:disabled{opacity:.4;cursor:default}
   padding:12px 8px;
   display:flex;
   flex-direction:column;
-  transition:.3s;
   border-radius:8px;
 }
 
@@ -151,14 +150,6 @@ button:disabled{opacity:.4;cursor:default}
 }
 
 .modal-actions button{flex:1}
-
-@media (max-width: 480px) {
-  .players {gap:6px; padding:0 6px;}
-  .player {padding:10px 6px;}
-  h1 {font-size:20px; margin:10px 0;}
-  .top-controls {padding:0 6px;}
-  select, button {font-size:15px; padding:7px 10px;}
-}
 </style>
 </head>
 
@@ -170,7 +161,8 @@ button:disabled{opacity:.4;cursor:default}
   <select id="count">
     <option value="">Jugadores</option>
     <option value="2">2</option><option value="3">3</option>
-    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+    <option value="4">4</option><option value="5">5</option>
+    <option value="6">6</option>
   </select>
   <button class="btn-undo" id="undo" disabled>DESHACER</button>
 </div>
@@ -191,172 +183,174 @@ button:disabled{opacity:.4;cursor:default}
 
 <script>
 let state = JSON.parse(localStorage.getItem("apuntado")) || {
-  count: 0, players: [], history: [], winner: null
+  count:0, players:[], history:[], winner:null
 };
 
-const playersDiv = document.getElementById("players");
-const countSel = document.getElementById("count");
-const undoBtn = document.getElementById("undo");
-const modal = document.getElementById("modal");
-const modalText = document.getElementById("modalText");
-const modalInput = document.getElementById("modalInput");
-const modalActions = document.getElementById("modalActions");
+const playersDiv=document.getElementById("players");
+const countSel=document.getElementById("count");
+const undoBtn=document.getElementById("undo");
+const modal=document.getElementById("modal");
+const modalText=document.getElementById("modalText");
+const modalInput=document.getElementById("modalInput");
+const modalActions=document.getElementById("modalActions");
 
-function save() { localStorage.setItem("apuntado", JSON.stringify(state)); }
-function snapshot() { state.history.push(JSON.stringify(state)); undoBtn.disabled = false; }
+function save(){localStorage.setItem("apuntado",JSON.stringify(state))}
+function snapshot(){state.history.push(JSON.stringify(state));undoBtn.disabled=false}
 
-function render() {
-  playersDiv.innerHTML = "";
-  if (!state.count) return;
+function render(){
+  playersDiv.innerHTML="";
+  if(!state.count)return;
 
-  state.players.forEach((p, i) => {
-    const d = document.createElement("div");
-    d.className = "player";
-    if (state.winner !== null) {
-      if (i === state.winner) d.classList.add("winner");
+  state.players.forEach((p,i)=>{
+    const d=document.createElement("div");
+    d.className="player";
+    if(state.winner!==null){
+      if(i===state.winner)d.classList.add("winner");
       else d.classList.add("disabled");
-    } else if (p.disabled) d.classList.add("disabled");
+    }else if(p.disabled)d.classList.add("disabled");
 
-    d.innerHTML = `
+    d.innerHTML=`
       <div class="name-block">
         <input class="name" value="${p.name}">
-        ${p.entradas > 0 ? `<div class="entradas">ENTRADAS: ${p.entradas}</div>` : ""}
+        ${p.entradas>0?`<div class="entradas">ENTRADAS: ${p.entradas}</div>`:""}
       </div>
       <div class="divider"></div>
       <div class="score-zone">
-        <div class="score ${p.out ? "out" : ""}">${p.score}</div>
-        ${state.winner === i ? '<div class="winner-label">GANADOR</div>' : ""}
+        <div class="score ${p.out?"out":""}">${p.score}</div>
+        ${state.winner===i?'<div class="winner-label">GANADOR</div>':""}
       </div>
     `;
 
-    const nameInput = d.querySelector(".name");
-    nameInput.oninput = e => {
-      p.name = e.target.value.toUpperCase();
-      save();
-    };
-    nameInput.addEventListener('focus', () => nameInput.select());
+    const nameInput=d.querySelector(".name");
+    nameInput.oninput=e=>{p.name=e.target.value.toUpperCase();save()}
+    nameInput.addEventListener("focus",()=>nameInput.select());
 
-    d.querySelector(".score-zone").onclick = () => openScore(i);
-
+    d.querySelector(".score-zone").onclick=()=>openScore(i);
     playersDiv.appendChild(d);
   });
 }
 
-function openScore(i) {
-  modalText.textContent = "Puntos";
-  modalInput.value = "";
-  modal.style.display = "flex";
-  modalInput.style.display = "block";
-  setTimeout(() => modalInput.focus(), 200);
-  modalActions.innerHTML = `
+function openScore(i){
+  modalText.textContent="Puntos";
+  modalInput.value="";
+  modalInput.style.display="block";
+  modal.style.display="flex";
+  setTimeout(()=>modalInput.focus(),150);
+  modalActions.innerHTML=`
     <button onclick="apply(${i},1)">SUMAR</button>
     <button onclick="apply(${i},-1)">RESTAR</button>
   `;
 }
 
-function apply(i, m) {
-  const v = parseInt(modalInput.value);
-  if (isNaN(v) || modalInput.value === "") return;
+function apply(i,m){
+  const v=parseInt(modalInput.value);
+  if(isNaN(v))return;
   snapshot();
-  state.players[i].score += v * m;
-  modal.style.display = "none";
+  state.players[i].score+=v*m;
+  modal.style.display="none";
   checkState();
-  save();
-  render();
+  save();render();
 }
 
-function checkState() {
-  let newWinner = null;
-  state.players.forEach((p, i) => {
-    if (!p.disabled && p.score <= -51) newWinner = i;
+function checkState(){
+  let newWinner=null;
+
+  state.players.forEach((p,i)=>{
+    if(!p.disabled && p.score<=-51)newWinner=i;
   });
-  if (newWinner !== null) {
-    state.winner = newWinner;
-    save();
-    render();
+
+  if(newWinner!==null){
+    state.winner=newWinner;
+    save();render();
     return;
   }
 
-  state.players.forEach((p, i) => {
-    if (!p.disabled && p.score >= 101) askReentry(i);
+  state.players.forEach((p,i)=>{
+    if(!p.disabled && p.score>=101 && !p.reentryLock){
+      p.reentryLock=true;
+      askReentry(i);
+    }
   });
 
-  const active = state.players.filter(p => !p.disabled).length;
-  if (active === 1 && state.winner === null) {
-    state.winner = state.players.findIndex(p => !p.disabled);
-    save();
-    render();
+  const active=state.players.filter(p=>!p.disabled).length;
+  if(active===1 && state.winner===null){
+    state.winner=state.players.findIndex(p=>!p.disabled);
+    save();render();
   }
 }
 
-function askReentry(i) {
-  modalText.textContent = `${state.players[i].name} ¿Desea ingresar nuevamente?`;
-  modalInput.style.display = "none";
-  modalActions.innerHTML = `
+function askReentry(i){
+  modalText.textContent=`${state.players[i].name} ¿Desea ingresar nuevamente?`;
+  modalInput.style.display="none";
+  modalActions.innerHTML=`
     <button class="btn-yes" onclick="reenter(${i})">SÍ</button>
     <button class="btn-no" onclick="reject(${i})">NO</button>
   `;
-  modal.style.display = "flex";
+  modal.style.display="flex";
 }
 
-function reenter(i) {
-  modalText.textContent = "¿Con cuántos puntos entra?";
-  modalInput.style.display = "block";
-  modalInput.value = "";
-  setTimeout(() => modalInput.focus(), 200);
-  modalActions.innerHTML = `
+function reenter(i){
+  modalText.textContent="¿Con cuántos puntos entra?";
+  modalInput.style.display="block";
+  modalInput.value="";
+  setTimeout(()=>modalInput.focus(),150);
+  modalActions.innerHTML=`
     <button class="btn-yes" onclick="setEntry(${i})">ENTRAR</button>
   `;
 }
 
-function setEntry(i) {
-  const v = parseInt(modalInput.value);
-  if (isNaN(v) || modalInput.value === "") return;
+function setEntry(i){
+  const v=parseInt(modalInput.value);
+  if(isNaN(v))return;
   snapshot();
-  const p = state.players[i];
-  p.score = v;
-  p.out = false;
-  p.disabled = false;
-  p.entradas = (p.entradas || 0) + 1;
-  modal.style.display = "none";
-  save();
-  render();  // Primero renderizamos con el nuevo estado
-  checkState();  // Luego chequeamos condiciones
+  const p=state.players[i];
+  p.score=v;
+  p.disabled=false;
+  p.out=false;
+  p.entradas=(p.entradas||0)+1;
+  p.reentryLock=false;
+  modal.style.display="none";
+  save();render();
 }
 
-function reject(i) {
+function reject(i){
   snapshot();
-  const p = state.players[i];
-  p.disabled = true;
-  p.out = true;
-  modal.style.display = "none";
-  save();
-  render();
+  const p=state.players[i];
+  p.disabled=true;
+  p.out=true;
+  p.reentryLock=false;
+  modal.style.display="none";
+  save();render();
   checkState();
 }
 
-countSel.onchange = () => {
-  state.count = parseInt(countSel.value);
-  state.players = [];
-  state.history = [];
-  state.winner = null;
-  for (let i = 0; i < state.count; i++) {
-    state.players.push({ name: `NOMBRE ${i + 1}`, score: 0, entradas: 0, disabled: false, out: false });
+countSel.onchange=()=>{
+  state.count=parseInt(countSel.value);
+  state.players=[];
+  state.history=[];
+  state.winner=null;
+  for(let i=0;i<state.count;i++){
+    state.players.push({
+      name:`NOMBRE ${i+1}`,
+      score:0,
+      entradas:0,
+      disabled:false,
+      out:false,
+      reentryLock:false
+    });
   }
-  save();
-  render();
+  save();render();
 };
 
-undoBtn.onclick = () => {
-  if (!state.history.length) return;
-  state = JSON.parse(state.history.pop());
-  if (state.history.length === 0) undoBtn.disabled = true;
-  save();
-  render();
+undoBtn.onclick=()=>{
+  if(!state.history.length)return;
+  state=JSON.parse(state.history.pop());
+  undoBtn.disabled=!state.history.length;
+  save();render();
 };
 
-function resetGame() {
-  if (confirm("¿Reiniciar juego?")) {
+function resetGame(){
+  if(confirm("¿Reiniciar juego?")){
     localStorage.removeItem("apuntado");
     location.reload();
   }
