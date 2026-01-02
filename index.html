@@ -6,12 +6,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
-/* Estilos Base */
+/* Estilos Base - Sin cambios */
 *{box-sizing:border-box;font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
 body{margin:0;background:#000;color:#fff;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
 h1{text-align:center;letter-spacing:4px;margin:15px 0;font-size:24px;color:#fff;}
 
-/* Controles Superiores */
 .top-controls{
   display:flex;justify-content:center;gap:15px;
   margin-bottom:15px;padding:0 10px;
@@ -27,7 +26,7 @@ button:disabled{opacity:0.2; transform: none;}
 
 .btn-undo{border-color:#d4af37;color:#d4af37}
 
-/* REJILLA DE JUGADORES (Móvil por defecto: 2 columnas) */
+/* REJILLA DE JUGADORES (Móvil: 2 columnas) */
 .players{
   display:grid;
   grid-template-columns: 1fr 1fr; 
@@ -38,10 +37,9 @@ button:disabled{opacity:0.2; transform: none;}
 /* CAMBIO PARA PC/PANTALLAS ANCHAS */
 @media (min-width: 768px) {
   .players {
-    /* En PC se ajusta al número de jugadores para que queden uno al lado del otro */
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     max-width: 1200px;
-    margin: 0 auto; /* Centra el tablero en monitores muy grandes */
+    margin: 0 auto;
   }
 }
 
@@ -49,7 +47,7 @@ button:disabled{opacity:0.2; transform: none;}
   border:1px solid #222;padding:15px 5px;
   display:flex;flex-direction:column;border-radius:12px;
   background: #050505; position: relative;
-  height: 200px; /* Tamaño fijo mantenido */
+  height: 200px;
 }
 
 .player.disabled{opacity:0.25; filter: grayscale(1);}
@@ -119,9 +117,11 @@ button:disabled{opacity:0.2; transform: none;}
 <div class="top-controls">
   <select id="count">
     <option value="0">INICIO</option>
-    <option value="2">2</option><option value="3">3</option>
-    <option value="4">4</option><option value="5">5</option>
-    <option value="6">6</option>
+    <option value="2">2 JUGADORES</option>
+    <option value="3">3 JUGADORES</option>
+    <option value="4">4 JUGADORES</option>
+    <option value="5">5 JUGADORES</option>
+    <option value="6">6 JUGADORES</option>
   </select>
   <button class="btn-undo" id="undo" onclick="undo()" disabled>DESHACER</button>
 </div>
@@ -137,7 +137,6 @@ button:disabled{opacity:0.2; transform: none;}
 </div>
 
 <script>
-// La lógica del estado y funciones permanece intacta como te gusta
 let state = JSON.parse(localStorage.getItem("apuntado_v2")) || {
   players: [],
   history: [],
