@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
-/* Estilos Base - Sin cambios */
+/* Estilos Base Mantenidos */
 *{box-sizing:border-box;font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
 body{margin:0;background:#000;color:#fff;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
 h1{text-align:center;letter-spacing:4px;margin:15px 0;font-size:24px;color:#fff;}
@@ -26,7 +26,7 @@ button:disabled{opacity:0.2; transform: none;}
 
 .btn-undo{border-color:#d4af37;color:#d4af37}
 
-/* REJILLA DE JUGADORES (Móvil: 2 columnas) */
+/* REJILLA DE JUGADORES (Móvil: 2 columnas, PC: auto-ajuste) */
 .players{
   display:grid;
   grid-template-columns: 1fr 1fr; 
@@ -34,7 +34,6 @@ button:disabled{opacity:0.2; transform: none;}
   align-content: start;
 }
 
-/* CAMBIO PARA PC/PANTALLAS ANCHAS */
 @media (min-width: 768px) {
   .players {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -280,13 +279,17 @@ function eliminatePlayer(i) {
   checkGameLogic();
 }
 
+// Botón Deshacer con Confirmación
 function undo() {
   if (state.history.length === 0) return;
-  const lastState = JSON.parse(state.history.pop());
-  state.players = lastState.players;
-  state.winner = lastState.winner;
-  save();
-  render();
+  
+  if (confirm("¿Deseas deshacer la última acción?")) {
+    const lastState = JSON.parse(state.history.pop());
+    state.players = lastState.players;
+    state.winner = lastState.winner;
+    save();
+    render();
+  }
 }
 
 countSel.onchange = () => {
