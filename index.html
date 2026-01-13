@@ -2,18 +2,48 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>APUNTADO</title>
+<title>APUNTADO PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
 /* Estilos Base Mantenidos */
 *{box-sizing:border-box;font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
-body{margin:0;background:#000;color:#fff;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
+
+body{
+  margin:0;
+  background:#000;
+  color:#fff;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow-x:hidden;
+  position: relative;
+}
+
+/* Configuración del Papel Tapiz con transparencia baja */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* URL de la imagen de GitHub proporcionada */
+  background-image: url('https://github.com/pandemiaproducciones/apuntado/blob/main/logo_elefante.png?raw=true');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.1; /* Transparencia muy baja para que sea sutil */
+  z-index: -1; /* Queda detrás de todo */
+}
+
 h1{text-align:center;letter-spacing:4px;margin:15px 0;font-size:24px;color:#fff;}
+h1 span { font-size: 14px; letter-spacing: 1px; color: #666; vertical-align: middle; margin-left: 10px; }
 
 .top-controls{
   display:flex;justify-content:center;gap:15px;
   margin-bottom:15px;padding:0 10px;
+  position: relative; z-index: 1;
 }
 
 select, button{
@@ -26,12 +56,13 @@ button:disabled{opacity:0.2; transform: none;}
 
 .btn-undo{border-color:#d4af37;color:#d4af37}
 
-/* REJILLA DE JUGADORES (Móvil: 2 columnas, PC: auto-ajuste) */
+/* REJILLA DE JUGADORES */
 .players{
   display:grid;
   grid-template-columns: 1fr 1fr; 
   gap:10px;padding:0 10px 20px 10px;flex:1;
   align-content: start;
+  position: relative; z-index: 1;
 }
 
 @media (min-width: 768px) {
@@ -45,7 +76,8 @@ button:disabled{opacity:0.2; transform: none;}
 .player{
   border:1px solid #222;padding:15px 5px;
   display:flex;flex-direction:column;border-radius:12px;
-  background: #050505; position: relative;
+  background: #050505; /* Fondo sólido para tapar el papel tapiz */
+  position: relative;
   height: 200px;
 }
 
@@ -111,7 +143,7 @@ button:disabled{opacity:0.2; transform: none;}
 
 <body>
 
-<h1>APUNTADO</h1>
+<h1>APUNTADO <span>V1.0</span></h1>
 
 <div class="top-controls">
   <select id="count">
@@ -279,10 +311,8 @@ function eliminatePlayer(i) {
   checkGameLogic();
 }
 
-// Botón Deshacer con Confirmación
 function undo() {
   if (state.history.length === 0) return;
-  
   if (confirm("¿Deseas deshacer la última acción?")) {
     const lastState = JSON.parse(state.history.pop());
     state.players = lastState.players;
